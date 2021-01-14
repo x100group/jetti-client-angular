@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
-import { FormListSettings, UserDefaultsSettings, UserSettings } from 'src/common/user.settings';
+import { FormListSettings, UserDefaultsSettings, UserSettings } from 'jetti-middle';
 import { ApiService } from '../../services/api.service';
 
 export interface FormListSettingsAction { type: string; payload: FormListSettings; }

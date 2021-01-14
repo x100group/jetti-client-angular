@@ -8,7 +8,7 @@ import { ApiService } from '../../services/api.service';
 import { EditableColumn } from '../datatable/table';
 import { DocService } from '../doc.service';
 import { SortEvent } from 'primeng/api';
-import { ColumnDef } from 'src/common/column';
+import { ColumnDef } from 'jetti-middle';
 
 const TablePartValidator: ValidatorFn = (c: AbstractControl) => {
   let res = null;

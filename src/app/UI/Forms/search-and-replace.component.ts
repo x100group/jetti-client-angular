@@ -7,7 +7,7 @@ import { TabsStore } from 'src/app/common/tabcontroller/tabs.store';
 import { DynamicFormService, getFormGroup } from 'src/app/common/dynamic-form/dynamic-form.service';
 import { LoadingService } from 'src/app/common/loading.service';
 import { take } from 'rxjs/operators';
-import { FormBase } from 'src/common/models/form';
+import { FormBase } from 'jetti-middle';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

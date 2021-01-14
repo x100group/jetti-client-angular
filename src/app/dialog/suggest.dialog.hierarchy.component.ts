@@ -11,14 +11,9 @@ import { LoadingService } from '../common/loading.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { v1 } from 'uuid';
 import { TreeNode } from 'primeng/api';
-import { ColumnDef } from 'src/common/column';
-import { ISuggest } from 'src/common/common-types';
-import { StorageType, DocumentOptions } from 'src/common/document-types';
-import { DocumentBase } from 'src/common/models/document';
-import { FormListSettings, FormListOrder, FormListFilter } from 'src/common/user.settings';
-import { Type } from 'src/common/helpers/type';
+import { StorageType, FormListOrder, FormListFilter, FormListSettings, ISuggest, ColumnDef, DocumentOptions, DocumentBase, Type } from 'jetti-middle';
 
-@Component({
+@Component({ 
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'j-suggest-hierarchy-list',
   templateUrl: './suggest.dialog.hierarchy.component.html'

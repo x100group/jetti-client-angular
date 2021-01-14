@@ -3,7 +3,7 @@ import { Injectable, isDevMode } from '@angular/core';
 import { MessageService } from 'primeng/components/common/messageservice';
 import { Observable, of as observableOf, throwError } from 'rxjs';
 import { catchError, map, finalize } from 'rxjs/operators';
-import { dateReviver, dateReviverLocal } from 'src/common/functions/dateReviver';
+import { dateReviver, dateReviverLocal } from 'jetti-middle';
 import { AuthService } from './auth/auth.service';
 import { LoadingService } from './common/loading.service';
 

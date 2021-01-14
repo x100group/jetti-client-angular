@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
-import { of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { StorageType } from 'src/common/document-types';
+import { StorageType } from 'jetti-middle';
 import { ApiService } from '../../services/api.service';
 // tslint:disable-next-line:max-line-length
 import { AutocompleteFormControl, BooleanFormControl, DateFormControl, DateTimeFormControl, EnumFormControl, FormControlInfo, IFormControlInfo, NumberFormControl, ScriptFormControl, TableDynamicControl, TextareaFormControl, TextboxFormControl, ControlTypes, LinkFormControl, URLFormControl, IFormControlPlacing as IFormControlPlacement } from './dynamic-form-base';

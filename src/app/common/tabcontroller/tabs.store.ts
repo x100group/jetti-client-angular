@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { FormGroup } from '@angular/forms';
-import { IViewModel } from 'src/common/document-types';
+import { IViewModel } from 'jetti-middle';
 
 export interface TabDef {
   header: string;

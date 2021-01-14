@@ -9,7 +9,7 @@ import { LoadingService } from 'src/app/common/loading.service';
 import { take } from 'rxjs/operators';
 import { IFormControlPlacing } from 'src/app/common/dynamic-form/dynamic-form-base';
 import { Subscription, BehaviorSubject } from 'rxjs';
-import { FormBase } from 'src/common/models/form';
+import { FormBase } from 'jetti-middle';
 
 type panelModify = 'Тип объектов' | 'Параметры' | 'Дополнительно' | 'Фильтр' | 'Список объектов' | 'Новые значения реквизитов';
 type panelLoad = 'Тип объектов' | 'Параметры' | 'Фильтр' | 'Список объектов' | 'Новые значения реквизитов';

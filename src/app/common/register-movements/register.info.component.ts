@@ -3,8 +3,7 @@ import { Observable } from 'rxjs';
 import { map, share } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
-import { DocumentBase } from 'src/common/models/document';
-import { RegisterInfo } from 'src/common/models/register-info';
+import { DocumentBase, RegisterInfo } from 'jetti-middle';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

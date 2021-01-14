@@ -2,12 +2,12 @@ import { Injectable, NgModule } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 // tslint:disable-next-line:max-line-length
 import { ActivatedRouteSnapshot, DetachedRouteHandle, Resolve, RouteReuseStrategy, RouterModule, RouterStateSnapshot, Routes } from '@angular/router';
-import { IViewModel } from 'src/common/document-types';
 import { AuthGuardService } from './auth/auth.guard.service';
 import { DynamicFormService } from './common/dynamic-form/dynamic-form.service';
 import { TabControllerComponent } from './common/tabcontroller/tabcontroller.component';
 import { TabsStore } from './common/tabcontroller/tabs.store';
 import { ApiService } from './services/api.service';
+import { IViewModel } from 'jetti-middle';
 
 export class AppRouteReuseStrategy extends RouteReuseStrategy {
   shouldDetach(route: ActivatedRouteSnapshot): boolean { return false; }

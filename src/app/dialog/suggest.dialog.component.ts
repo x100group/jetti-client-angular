@@ -11,13 +11,7 @@ import { DocService } from '../common/doc.service';
 import { LoadingService } from '../common/loading.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { v1 } from 'uuid';
-import { ColumnDef } from 'src/common/column';
-import { ISuggest } from 'src/common/common-types';
-import { StorageType, DocumentOptions } from 'src/common/document-types';
-import { DocumentBase } from 'src/common/models/document';
-import { FormListSettings, FormListOrder, FormListFilter } from 'src/common/user.settings';
-import { Type } from 'src/common/helpers/type';
-
+import { StorageType, FormListSettings, ISuggest, Type, ColumnDef, DocumentBase, DocumentOptions, FormListFilter, FormListOrder } from 'jetti-middle';
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'j-suggest-list',

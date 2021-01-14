@@ -11,10 +11,7 @@ import { v1 } from 'uuid';
 import { DocService } from '../doc.service';
 import { filter } from 'rxjs/operators';
 import { patchOptionsNoEvents } from '../dynamic-form/dynamic-form.service';
-import { ISuggest } from 'src/common/common-types';
-import { OwnerRef, StorageType } from 'src/common/document-types';
-import { FormListSettings, FormListFilter } from 'src/common/user.settings';
-import { Type } from 'src/common/helpers/type';
+import { Type, ISuggest, OwnerRef, StorageType, FormListSettings, FormListFilter } from 'jetti-middle';
 
 function AutocompleteValidator(component: AutocompleteComponent): ValidatorFn {
   return (c: AbstractControl) => {

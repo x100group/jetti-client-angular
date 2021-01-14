@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import { DocService } from '../doc.service';
 import { LoadingService } from '../loading.service';
 import { getFormGroup } from '../dynamic-form/dynamic-form.service';
-import { DocumentBase } from 'src/common/models/document';
+import { DocumentBase } from 'jetti-middle';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

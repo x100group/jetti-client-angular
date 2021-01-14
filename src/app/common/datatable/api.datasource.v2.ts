@@ -1,8 +1,6 @@
 import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
 import { catchError, filter, map, share, switchMap, tap } from 'rxjs/operators';
-import { DocListOptions, Continuation, DocListResponse } from 'src/common/common-types';
-import { DocumentBase } from 'src/common/models/document';
-import { FormListSettings } from 'src/common/user.settings';
+import { DocListOptions, Continuation, DocListResponse, DocumentBase, FormListSettings } from 'jetti-middle';
 import { ApiService } from '../../services/api.service';
 import { scrollIntoViewIfNeeded } from '../utils';
 

@@ -12,13 +12,8 @@ import { FormControlInfo } from '../dynamic-form/dynamic-form-base';
 import { patchOptionsNoEvents, DynamicFormService, getFormGroup } from '../dynamic-form/dynamic-form.service';
 import { TabsStore } from '../tabcontroller/tabs.store';
 import { AuthService } from 'src/app/auth/auth.service';
-import { Type } from 'src/common/helpers/type';
-import { DocumentOptions, Relation, Command, CopyTo, Ref, IViewModel } from 'src/common/document-types';
-import { dateReviverLocal } from 'src/common/functions/dateReviver';
-import { DocumentBase } from 'src/common/models/document';
-import { FormBase } from 'src/common/models/form';
-import { calculateDescription } from 'src/common/functions/calculateDescription';
-
+// tslint:disable-next-line: max-line-length
+import { DocumentBase, Type, DocumentOptions, Relation, CopyTo, FormBase, Command, calculateDescription, dateReviverLocal, Ref, IViewModel } from 'jetti-middle';
 
 export declare interface IFormEventsModel {
   onOpen(): void;

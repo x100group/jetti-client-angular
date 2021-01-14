@@ -17,11 +17,8 @@ import { Table } from './table';
 import { DynamicFormService } from '../dynamic-form/dynamic-form.service';
 import { TabsStore } from '../tabcontroller/tabs.store';
 import { TreeNode } from 'primeng/api';
-import { ColumnDef } from 'src/common/column';
-import { IViewModel, DocumentOptions } from 'src/common/document-types';
-import { FormListSettings, FormListOrder, FormListFilter } from 'src/common/user.settings';
-import { Type } from 'src/common/helpers/type';
-import { buildColumnDef } from 'src/common/functions/columns-def';
+// tslint:disable-next-line: max-line-length
+import { ColumnDef, IViewModel, DocumentOptions, FormListSettings, FormListOrder, FormListFilter, Type, buildColumnDef } from 'jetti-middle';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

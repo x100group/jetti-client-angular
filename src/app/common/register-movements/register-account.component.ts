@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { merge, Observable } from 'rxjs';
 import { filter, startWith, switchMap } from 'rxjs/operators';
-import { DocumentBase } from 'src/common/models/document';
-import { AccountRegister } from 'src/common/register-account';
 import { ApiService } from '../../services/api.service';
 import { DocService } from '../doc.service';
+import { AccountRegister, DocumentBase } from 'jetti-middle';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
