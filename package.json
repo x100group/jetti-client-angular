@@ -51,6 +51,6 @@
     "@types/uuid": "^8.3.0",
     "codelyzer": "~5.1.2",
     "tslint": "^5.0.0",
-    "typescript": "^3.5.3"
+    "typescript": "~3.5.3"
   }
 }
