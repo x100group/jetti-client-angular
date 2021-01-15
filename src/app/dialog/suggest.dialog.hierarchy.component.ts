@@ -11,9 +11,7 @@ import { LoadingService } from '../common/loading.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { v1 } from 'uuid';
 import { TreeNode } from 'primeng/api';
-import { StorageType, FormListOrder, FormListFilter, FormListSettings, ISuggest, ColumnDef, DocumentOptions, DocumentBase, Type } from 'jetti-middle';
-
-
+import { StorageType, FormListOrder, FormListFilter, FormListSettings, ISuggest, ColumnDef, DocumentOptions, DocumentBase, Type } from 'jetti-middle/dist';
 @Component({ 
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'j-suggest-hierarchy-list',

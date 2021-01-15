@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, OnInit, ViewChild, Input } from '@a
 import { take } from 'rxjs/operators';
 import { BaseDocListComponent } from './../../common/datatable/base.list.component';
 import { AuthService } from 'src/app/auth/auth.service';
-import { IViewModel } from 'jetti-middle';
+import { IViewModel } from 'jetti-middle/dist';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

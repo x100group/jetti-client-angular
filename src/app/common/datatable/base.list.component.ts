@@ -16,7 +16,7 @@ import { LoadingService } from './../../common/loading.service';
 import { Table } from './table';
 import { DynamicFormService } from '../dynamic-form/dynamic-form.service';
 import { TabsStore } from '../tabcontroller/tabs.store';
-import { ColumnDef, IViewModel, DocumentOptions, buildColumnDef, DocumentBase, FormListSettings, FormListOrder, FormListFilter, Type } from 'jetti-middle';
+import { ColumnDef, IViewModel, DocumentOptions, buildColumnDef, DocumentBase, FormListSettings, FormListOrder, FormListFilter, Type } from 'jetti-middle/dist';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

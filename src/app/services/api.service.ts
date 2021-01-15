@@ -4,17 +4,17 @@ import { environment } from '../../environments/environment';
 import { IComplexObject } from '../common/dynamic-form/dynamic-form-base';
 import { LoadingService } from '../common/loading.service';
 import { viewModelToFlatDocument } from '../common/mapping/document.mapping';
-import { DocumentBase } from 'jetti-middle';
-import { RegisterAccumulation } from 'jetti-middle';
-import { RegisterInfo } from 'jetti-middle';
-import { FormBase, PropOption } from 'jetti-middle';
+import { DocumentBase } from 'jetti-middle/dist';
+import { RegisterAccumulation } from 'jetti-middle/dist';
+import { RegisterInfo } from 'jetti-middle/dist';
+import { FormBase, PropOption } from 'jetti-middle/dist';
 import { MenuItem } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { take } from 'rxjs/operators';
-import { IAttachmentsSettings, RefValue, DocListOptions, DocListResponse, DocListRequestBody, ISuggest, IJob, IJobs, ITree } from 'jetti-middle';
-import { Ref, IViewModel } from 'jetti-middle';
-import { FormListOrder, FormListFilter, FormListSettings, UserDefaultsSettings } from 'jetti-middle';
-import { AccountRegister } from 'jetti-middle';
+import { IAttachmentsSettings, RefValue, DocListOptions, DocListResponse, DocListRequestBody, ISuggest, IJob, IJobs, ITree } from 'jetti-middle/dist';
+import { Ref, IViewModel } from 'jetti-middle/dist';
+import { FormListOrder, FormListFilter, FormListSettings, UserDefaultsSettings } from 'jetti-middle/dist';
+import { AccountRegister } from 'jetti-middle/dist';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {

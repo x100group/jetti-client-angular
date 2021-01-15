@@ -1,5 +1,6 @@
 {
   "extends": "./tsconfig.json",
+  "skipLibCheck": true,
   "compilerOptions": {
     "outDir": "./out-tsc/app",
     "types": []
@@ -13,8 +14,6 @@
   ],
   "exclude": [
     "src/test.ts",
-    "src/**/*.spec.ts",
-    "/node_modules/jetti-middle/index.ts",
-    "/node_modules/jetti-middle/common/**/*.ts"
+    "src/**/*.spec.ts"
   ]
 }

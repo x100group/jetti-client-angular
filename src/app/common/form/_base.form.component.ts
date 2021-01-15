@@ -13,7 +13,7 @@ import { patchOptionsNoEvents, DynamicFormService, getFormGroup } from '../dynam
 import { TabsStore } from '../tabcontroller/tabs.store';
 import { AuthService } from 'src/app/auth/auth.service';
 // tslint:disable-next-line: max-line-length
-import { DocumentBase, Type, DocumentOptions, Relation, CopyTo, FormBase, Command, calculateDescription, dateReviverLocal, Ref, IViewModel } from 'jetti-middle';
+import { DocumentBase, Type, DocumentOptions, Relation, CopyTo, FormBase, Command, calculateDescription, dateReviverLocal, Ref, IViewModel } from 'jetti-middle/dist';
 
 export declare interface IFormEventsModel {
   onOpen(): void;

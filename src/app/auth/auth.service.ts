@@ -6,7 +6,7 @@ import { BehaviorSubject } from 'rxjs';
 import { filter, map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import jwt_decode, { JwtPayload } from 'jwt-decode';
-import { IAccount, ILoginResponse } from 'jetti-middle';
+import { IAccount, ILoginResponse } from 'jetti-middle/dist';
 export const ANONYMOUS_USER: ILoginResponse = { account: undefined, token: '', photo: undefined };
 
 @Injectable()

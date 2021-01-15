@@ -9,7 +9,7 @@ import { DynamicFormService, getFormGroup } from 'src/app/common/dynamic-form/dy
 import { LoadingService } from 'src/app/common/loading.service';
 import { environment } from 'src/environments/environment';
 import { take, filter } from 'rxjs/operators';
-import { FormBase } from 'jetti-middle';
+import { FormBase } from 'jetti-middle/dist';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

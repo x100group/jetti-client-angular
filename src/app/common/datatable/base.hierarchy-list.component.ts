@@ -18,7 +18,7 @@ import { DynamicFormService } from '../dynamic-form/dynamic-form.service';
 import { TabsStore } from '../tabcontroller/tabs.store';
 import { TreeNode } from 'primeng/api';
 // tslint:disable-next-line: max-line-length
-import { ColumnDef, IViewModel, DocumentOptions, FormListSettings, FormListOrder, FormListFilter, Type, buildColumnDef } from 'jetti-middle';
+import { ColumnDef, IViewModel, DocumentOptions, FormListSettings, FormListOrder, FormListFilter, Type, buildColumnDef } from 'jetti-middle/dist';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,4 +1,4 @@
-import { OwnerRef, StorageType } from 'jetti-middle';
+import { OwnerRef, StorageType } from 'jetti-middle/dist';
 
 export type ControlTypes =
   'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'table' |
