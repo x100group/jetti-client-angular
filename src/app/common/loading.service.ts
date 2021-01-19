@@ -4,14 +4,18 @@ import { map } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
-  history = {};
+  historyState = {};
 
   private _loading = new BehaviorSubject<{ req: string, loading: boolean } | undefined>(undefined);
   loading$ = this._loading.asObservable();
   set loading(value: { req: string, loading: boolean }) {
-    if (history[value.req] && (value.loading !== true)) delete history[value.req];
-    else if ((value.loading === true) && value.req) history[value.req] = value.req;
-    if (Object.keys(history).length === 0) this._loading.next(undefined); else this._loading.next(value);
+    console.log('value', value);
+
+    if (this.historyState[value.req] && (value.loading !== true)) delete this.historyState[value.req];
+    else if ((value.loading === true) && value.req) this.historyState[value.req] = value.req;
+    if (Object.keys(this.historyState).length === 0) this._loading.next(undefined); else this._loading.next(value);
+
+    console.log('History state:', this.historyState);
   }
   get loading() { return this._loading.value!; }
 
