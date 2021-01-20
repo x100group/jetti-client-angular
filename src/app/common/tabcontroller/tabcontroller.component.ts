@@ -32,7 +32,6 @@ export class TabControllerComponent {
           el.group === (params.group || '')
         );
         if (index === -1) {
-          console.log(this.route.snapshot);
           const header = this.getTabTitle(this.route.snapshot.data.detail);
           const newLink: TabDef = {
             type: params.type,
@@ -62,7 +61,6 @@ export class TabControllerComponent {
   }
 
   private getTabTitle(detail) {
-    console.log(detail);
     if (detail instanceof FormGroup) {
       const doc = detail.getRawValue();
       const metadata = detail['metadata'];
