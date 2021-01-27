@@ -67,7 +67,7 @@
             </p-fieldset>
 
             <div *ngFor="let control of v">
-              <div *ngIf="control.controlType === 'script' && control.key !== 'module' && control.key !== 'script'"
+              <div *ngIf="control.controlType === 'script' && control.key !== 'module' && control.key !== 'script' && control.key !== 'scriptAccounting'"
                 style="height: 400px; width: 100%;">
                 <j-control [control]="control" [form]="form"></j-control>
               </div>
@@ -131,8 +131,13 @@
 
         <div *ngIf="!isHistory">
           <p-panel *ngIf="type === 'Catalog.Operation' && (isFolder$ | async) === false" [toggleable]="true"
-            header="Post script" [collapsed]="true" (collapsedChange)="mp.collapse($event);" toggler="header">
+            header="Post script (management)" [collapsed]="true" (collapsedChange)="mp.collapse($event);" toggler="header">
             <j-control *ngIf="vk.script" [control]="vk.script" [form]="form"></j-control>
+          </p-panel>
+
+          <p-panel *ngIf="type === 'Catalog.Operation' && (isFolder$ | async) === false" [toggleable]="true"
+            header="Post script (accounting)" [collapsed]="true" (collapsedChange)="mp.collapse($event);" toggler="header">
+            <j-control *ngIf="vk.scriptAccounting" [control]="vk.scriptAccounting" [form]="form"></j-control>
           </p-panel>
 
           <p-panel *ngIf="(type === 'Catalog.Operation')" [toggleable]="true" header="Document module"

@@ -79,6 +79,18 @@ export class AuthService {
     return this.isRoleAvailable('Operation rules designer');
   }
 
+  public isRoleAvailableCompanyEditor(): boolean {
+    return this.isRoleAvailable('Company editor');
+  }
+
+  public isRoleAvailableDepartmentEditor(): boolean {
+    return this.isRoleAvailable('Department editor');
+  }
+
+  public isRoleAvailableisRoleAvailableResponsibilityCenterEditor(): boolean {
+    return this.isRoleAvailable('Responsibility center editor');
+  }
+
   public isRoleAvailableCashRequestAdmin(): boolean {
     return this.isRoleAvailable('Cash request admin');
   }
