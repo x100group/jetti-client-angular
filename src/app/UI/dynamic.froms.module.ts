@@ -11,7 +11,6 @@ import { RegisterInfoComponent } from '../common/register-movements/register.inf
 import { TabsStore } from '../common/tabcontroller/tabs.store';
 import { PrimeNGModule } from '../primeNG.module';
 import { AutocompleteComponent } from './../common/autocomplete/autocomplete.png.component';
-import { BaseDocListComponent } from './../common/datatable/base.list.component';
 import { TablePartsComponent } from './../common/datatable/table-parts.png.component';
 import { DocService } from './../common/doc.service';
 import { DynamicComponent, DynamicComponentDirective } from './../common/dynamic-component/dynamic-component';
@@ -30,6 +29,7 @@ import { DisableControlDirective } from '../common/directives/disabled-control';
 import { HistoryComponent } from '../common/history/history.component';
 import { DescendantsComponent } from '../common/descendants/descendants.component';
 import { TransformedRegisterMovementsComponent } from '../x100/transformed.register.movements.component';
+import { DialogService } from 'primeng/api';
 
 @NgModule({
   declarations: [
@@ -43,7 +43,7 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
 
     DisableControlDirective,
 
-    BaseDocListComponent,
+    // BaseDocListComponent,
     BaseDocFormComponent,
     BaseFormComponent,
     BaseTreeListComponent,
@@ -91,7 +91,7 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
 
     DisableControlDirective,
 
-    BaseDocListComponent,
+    // BaseDocListComponent,
     BaseDocFormComponent,
     BaseFormComponent,
     BaseTreeListComponent,
@@ -113,6 +113,7 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
     DescendantsComponent
   ],
   providers: [
+    DialogService,
     DynamicFormService,
     DocService,
     TabsStore,
@@ -120,7 +121,6 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
   entryComponents: [
     SuggestDialogComponent,
     HomeComponent,
-    BaseDocListComponent,
     BaseDocFormComponent,
     BaseFormComponent,
     BaseTreeListComponent,
