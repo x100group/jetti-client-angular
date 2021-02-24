@@ -1,0 +1,29 @@
+<ng-select class="custom" [items]="suggests$ | async" [multiple]="true" autofocus bindLabel="value"
+  [closeOnSelect]="false" [(ngModel)]="selectedItems" (search)="getSuggests($event.term)" appendTo="body"
+  [notFoundText]="notFoundText" (blur)="emitSelect()">
+
+  <ng-template ng-multi-label-tmp let-items="items" let-clear="clear">
+    <div class="ng-value" *ngFor="let item of items | slice:0:maxVisibleItems">
+      <span class="ng-value-icon right" (click)="clear(item)" aria-hidden="true">×</span>
+      <span class="ng-value-label">{{item.value | bcEllipsis:25}}</span>
+    </div>
+    <div class="ng-value" *ngIf="(items.length > maxVisibleItems) && maxVisibleItems > 0">
+      <span class="ng-value-label">{{items.length - maxVisibleItems}} more...</span>
+    </div>
+    <div class="ng-value" *ngIf="maxVisibleItems < 1">
+      <span class="ng-value-label">in {{items.length - maxVisibleItems}} items</span>
+    </div>
+  </ng-template>
+
+  <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index" class="some">
+    <div fxLayout="row" style="align-content: center; align-items: center;">
+      <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" />
+      <i *ngIf="!item.isfolder && !item.deleted" class="fa fa-check-square" style="color: #5cb85c"></i>
+      <i *ngIf="!item.isfolder && item.deleted" class="fa fa-minus-square" style="color: #d9534f"></i>
+      <i *ngIf="item.isfolder && item.deleted" class="fa fa-folder" style="color: #d9534f"></i>
+      <i *ngIf="item.isfolder && !item.deleted" class="fa fa-folder" style="color: #5cb85c"></i>
+      <div *ngIf="item.deleted"><s style="color: #d9534f">{{item.description}}</s></div>
+      <div *ngIf="!item.deleted">{{item.description}}</div>
+    </div>
+  </ng-template>
+</ng-select>

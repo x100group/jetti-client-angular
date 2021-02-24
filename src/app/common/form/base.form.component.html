@@ -76,7 +76,7 @@
             <div *ngIf="tables$ | async as tables">
               <br *ngIf="tables.length">
               <p-tabView *ngIf="tables.length" class="tabViewClassInForm">
-                <div *ngFor="let c of tables; let i = index">
+                <div *ngFor="let c of tables;">
                   <p-tabPanel [header]="c.label">
                     <j-control [control]="c" [form]="form"></j-control>
                   </p-tabPanel>

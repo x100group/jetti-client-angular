@@ -1,9 +1,10 @@
 import { ActivatedRoute } from '@angular/router';
 import { ChangeDetectionStrategy, Component, OnInit, ViewChild, Input } from '@angular/core';
-import { take } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { BaseHierarchyListComponent } from 'src/app/common/datatable/base.hierarchy-list.component';
-import { IViewModel } from 'jetti-middle';
+import { FormListFilter, IViewModel } from 'jetti-middle';
+import { combineLatest } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -17,20 +18,20 @@ import { IViewModel } from 'jetti-middle';
         </j-autocomplete-png>
       </div>
       <div fxFlex *ngIf="!super.group">
-        <j-autocomplete-png [ngModel]="getSuperColumn('Group')?.right" [inputStyle]="{'background-color': 'lightgoldenrodyellow'}"
+        <j-autocomplete-png [ngModel]="getSuperColumn('Group')?.filter.right" [inputStyle]="{'background-color': 'lightgoldenrodyellow'}"
           (ngModelChange)="super.update(getSuperColumn('Group'), $event, '=')"
           id="Group" placeholder="Select group of operation" type="Catalog.Operation.Group">
         </j-autocomplete-png>
       </div>
       <div fxFlex>
-        <j-autocomplete-png [ngModel]="getSuperColumn('user')?.right" [inputStyle]="{'background-color': 'lightgoldenrodyellow'}"
+        <j-autocomplete-png [ngModel]="getSuperColumn('user')?.filter.right" [inputStyle]="{'background-color': 'lightgoldenrodyellow'}"
           (ngModelChange)="super.update(getSuperColumn('user'), $event, '=')"
           id="user" placeholder="Select user" type="Catalog.User">
         </j-autocomplete-png>
       </div>
       </div>
   </div>
-  <j-hierarchy-list [data]="this.data" [type]="this.type" ></j-hierarchy-list>
+  <j-hierarchy-list [data]="this.data" [type]="this.type"></j-hierarchy-list>
   `
 })
 export class OperationListComponent implements OnInit {
@@ -41,12 +42,13 @@ export class OperationListComponent implements OnInit {
 
   constructor(public appAuth: AuthService, public route: ActivatedRoute) { }
 
-
   ngOnInit() {
     if (this.route.snapshot.queryParams.goto) return;
-    this.appAuth.userProfile$.pipe(take(1)).subscribe(u => {
-      this.super.settings.filter.push({ left: 'user', center: '=', right: u.account.env });
-    });
+    combineLatest([this.appAuth.userProfile$, this.super.isInitComplete$])
+      .pipe(filter(state => state[0] && state[1]))
+      .pipe(take(1)).subscribe(state => {
+        this.super.addFilterToSettings(new FormListFilter('user', '=', state[0].account.env.view, true), '');
+      });
   }
 
   getSuperColumn(field: string) {

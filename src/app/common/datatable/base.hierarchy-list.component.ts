@@ -3,19 +3,18 @@ import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit, ViewChild
 import { ActivatedRoute, Router } from '@angular/router';
 import { MenuItem } from 'primeng/components/common/menuitem';
 import { SortMeta } from 'primeng/components/common/sortmeta';
-import { iif as _if, merge, Observable, Subject, Subscription, fromEvent, of, BehaviorSubject } from 'rxjs';
+import { merge, Observable, Subject, Subscription, of, BehaviorSubject, combineLatest, fromEvent } from 'rxjs';
 import { debounceTime, filter, map, take } from 'rxjs/operators';
-import { v1 } from 'uuid';
+import { v1, v4 } from 'uuid';
 import { calendarLocale, dateFormat } from '../../primeNG.module';
-import { MaxTextWidth, scrollIntoViewIfNeeded } from '../utils';
-import { UserSettingsService, UserSettitngs } from './../../auth/settings/user.settings.service';
+import { scrollIntoViewIfNeeded } from '../utils';
+import { UserSettingsService } from './../../auth/settings/user.settings.service';
 import { ApiDataSource } from './../../common/datatable/api.datasource.v2';
 import { DocService } from './../../common/doc.service';
 import { LoadingService } from './../../common/loading.service';
 import { Table } from './table';
 import { DynamicFormService } from '../dynamic-form/dynamic-form.service';
-import { TabsStore } from '../tabcontroller/tabs.store';
-import { DialogService, DynamicDialogRef, TreeNode } from 'primeng/api';
+import { DialogService, TreeNode } from 'primeng/api';
 import { TreeTable } from 'primeng/treetable';
 import {
   buildColumnDef, ColumnDef, DocumentBase, DocumentOptions, FormListFilter,
@@ -24,6 +23,20 @@ import {
 import { matchOperatorByType } from 'jetti-middle/dist/common/types/common';
 import { IUserSettings } from 'jetti-middle/dist/common/classes/user-settings';
 import { FormListColumnProps } from 'jetti-middle/dist/common/classes/form-list';
+
+export const emptyComplexObject = { id: '00000000-0000-0000-0000-000000000000', type: '.', value: '', code: '' };
+
+export interface IUserSettingsState {
+  settings?: IUserSettings[];
+  selected?: IUserSettings;
+  isModify?: boolean;
+  isNew?: boolean;
+  isReadonly?: boolean;
+  apply?: boolean;
+}
+
+export type settingsKind = 'columns' | 'filter';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'j-hierarchy-list',
@@ -37,7 +50,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   locale = calendarLocale; dateFormat = dateFormat;
 
-  constructor(public route: ActivatedRoute, public router: Router, public ds: DocService, public tabStore: TabsStore,
+  constructor(public route: ActivatedRoute, public router: Router, public ds: DocService,
     public uss: UserSettingsService, public lds: LoadingService, public dss: DynamicFormService,
     private auth: AuthService, public dialog: DialogService) { }
 
@@ -48,10 +61,15 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private _debonceSubscription$: Subscription = Subscription.EMPTY;
   private _debonce$ = new Subject<FormListFilter>();
   private _resizeSubscription$: Subscription = Subscription.EMPTY;
-
-  private _usSubscription$: Subscription = Subscription.EMPTY;
-  private _columnsSettingsDialogRef: DynamicDialogRef;
   private _columnSettingsProps = ['width', 'visibility'];
+  private _filterSettingsState$: BehaviorSubject<IUserSettingsState> = new BehaviorSubject<IUserSettingsState>({ selected: { description: 'Default' } as any });
+  private _filterSettingsStateSubscription$: Subscription = Subscription.EMPTY;
+  private _columnsSettingsState$: BehaviorSubject<IUserSettingsState> = new BehaviorSubject<IUserSettingsState>({ selected: { description: 'Default' } as any });
+  private _columnsSettingsStateSubscription$: Subscription = Subscription.EMPTY;
+
+  private _isInitComplete$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+
+  isInitComplete$ = this._isInitComplete$.asObservable();
 
   pageSize$: Observable<number>;
 
@@ -59,12 +77,15 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   @ViewChild('tbl', { static: false }) tbl: Table;
   @ViewChild('treeTable', { static: false }) treeTable: TreeTable;
 
+  get columnsSettingsState() { return this._columnsSettingsState$.value; }
+  get filterSettingsState() { return this._filterSettingsState$.value; }
   get isDoc() { return Type.isDocument(this.type); }
   get isCatalog() { return Type.isCatalog(this.type); }
   get id() { return this.selectedData ? this.selectedData.id : null; }
   set id(id: string) { this.selection = [{ id, type: this.type }]; this.selectedNode = { data: { id: id }, key: id, type: this.type }; }
   get visibleColumns() { return this.columns.filter(column => column && !column.hidden); }
   get activeFilters() { return this.columns.filter(column => column.filter && column.filter.isActive).map(col => col.filter); }
+  get filteredColumns() { return this.columns.filter(column => column.filter && column.filter.isActive); }
   get allFilters() {
     return this.columns
       .filter(column => column.filter)
@@ -75,7 +96,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       (this.selectedNode ? this.selectedNode.data : null) :
       (this.selection && this.selection.length ? this.selection[0] : null);
   }
-
 
   get dataViewTypeChangeCommands() {
     return [
@@ -95,6 +115,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     field: 'posted', filter: { left: 'posted', center: '=', right: null }, type: 'boolean', label: 'posted',
     style: { width: '30px' }, order: 0, readOnly: false, required: false, hidden: false, value: undefined, headerStyle: {}
   });
+
+  private _windowWidth: number;
 
   group = '';
   columns: ColumnDef[] = [];
@@ -126,6 +148,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   addMenuItems: MenuItem[];
   showActiveFilters = false;
 
+
   getMatchOperatorsByType(type: string) {
     return (matchOperatorByType[type] || matchOperatorByType['default']).map(e => ({ label: e, value: e }));
   }
@@ -144,17 +167,17 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.settings.filter.forEach(e => e.isActive = true);
 
     this._initColumns();
-    this._initdataSource();
+    this._initDataSource();
     this.addMenuItemsFill();
     this.setSortOrder();
-    this.setFilters();
-    this.showDeletedSet(false);
+    this.showDeletedSet(false, false);
     this.prepareDataSource();
     this.setContextMenu(this.columns);
 
-    this._usSubscription$ = this.uss._settings$
-      .pipe(filter<IUserSettings[]>(settings => settings.filter(e => e.selected && e.type === this.type).length > 0))
-      .subscribe(settings => this.usSubscriptionHandler(settings));
+    this._filterSettingsStateSubscription$ = this._filterSettingsState$
+      .pipe(filter(e => e.apply)).subscribe(e => this.onFilterSettingsStateChanged(e));
+    this._columnsSettingsStateSubscription$ = this._columnsSettingsState$
+      .pipe(filter(e => e.apply)).subscribe(e => this.onColumnsSettingsStateChanged(e));
 
     this._docSubscription$ = merge(...[
       this.ds.save$, this.ds.delete$, this.ds.saveClose$, this.ds.goto$, this.ds.post$, this.ds.unpost$]).pipe(
@@ -163,34 +186,40 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
           && !!(!this.group || !doc['Group'] || this.group === doc['Group']['id'])))
       .subscribe(doc => this.docSubscriptionHandler(doc));
 
-    this.treeNodes$ = this.dataSource.result$.pipe(map(rows => {
-      if (this.treeNodesVisible) {
+    this.treeNodes$ = this.dataSource.result$
+      .pipe(filter(_ => this.treeNodesVisible))
+      .pipe(map(rows => {
         const selectedNodeId = this.selectedNode ? this.selectedNode.key : this.dataSource.id;
         this.selectedNode = null;
         this.treeNodes = this.buildTreeNodes(rows, null);
         this.findSelectedNode(this.treeNodes, selectedNodeId);
-        // if (this.selectedNode && !this.selectedNode.leaf) this.selectedNode.expanded = true;
         return this.treeNodes;
-      }
-    }));
+      }));
 
     // обработка команды найти в списке
     this._routeSubscription$ = this.route.params.pipe(
       filter(params => params.type === this.type && params.group === this.group && this.route.snapshot.queryParams.goto))
       .subscribe(params => this.routeSubscruptionHandler());
 
-    this._resizeSubscription$ = fromEvent(window, 'resize').subscribe(e => {
-      this._pageSize$.next(this.getPageSize());
-    });
+    this._resizeSubscription$ = fromEvent(window, 'resize')
+      .pipe(filter(_ => window.outerWidth !== this._windowWidth))
+      .subscribe(_ => {
+        this._saveWindowWidth();
+        this._pageSize$.next(this.getPageSize());
+      });
 
-    this._pageSizeSubscription$ = this._pageSize$.pipe(debounceTime(50))
-      .subscribe(pageSize => this.pageSizeSubscriptionHandler(pageSize));
+    this._pageSizeSubscription$ = combineLatest([this._pageSize$.pipe(debounceTime(50)), this.isInitComplete$])
+      .pipe(filter(latest => !!latest[1]))
+      .subscribe(latest => this.pageSizeSubscriptionHandler(latest[0]));
 
     this._debonceSubscription$ = this._debonce$.pipe(debounceTime(1000))
       .subscribe(event => this._update(event));
-
     this.usLoad();
+    this._saveWindowWidth();
+  }
 
+  private _saveWindowWidth() {
+    this._windowWidth = window.outerWidth;
   }
 
   private readRouteParams(route: ActivatedRoute) {
@@ -203,30 +232,38 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private _initColumns() {
-
-    this.columns = buildColumnDef(this.data.schema, this.settings);
     if (this.data.metadata['Group']) this.settings.filter.push({ left: 'Group', center: '=', right: this.data.metadata['Group'] });
-
+    this.columns = buildColumnDef(this.data.schema, this.settings);
     this.hierarchy = this.data.metadata.hierarchy === 'folders';
     this.treeNodesVisible = this.hierarchy && !this.settings.filter.length;
-
     if (this.hierarchy) {
       const descriptionColumn = this.columns.find(c => c.field === 'description');
-      if (descriptionColumn) {
+      if (descriptionColumn)
         this.columns = [descriptionColumn, ...this.columns.filter(c => c.field !== 'description')];
-      }
     }
-    this.columns.forEach(col => col.anyTemp = col.filter ? { label: col.filter.center, value: col.filter.center } : {});
+    this._resetColumnsFilters();
   }
 
-  private _initdataSource() {
+  private _resetColumnsFilters() {
+    this.columns.forEach(col => {
+      const colFilter = this.settings.filter.find(e => e.left === col.field);
+      if (colFilter) {
+        col.filter = colFilter;
+        col.filter['anyTemp'] = { label: colFilter.center, value: colFilter.center };
+      } else {
+        const operators = this.getMatchOperatorsByType(col.type);
+        col.filter = new FormListFilter(col.field, operators[0].value);
+        col.filter['anyTemp'] = operators[0];
+      }
+      if (col.type === 'number')
+        col.filter.interval = colFilter && colFilter.center === 'beetwen' ? { ...colFilter.right } : { start: null, end: null };
+    });
+  }
+
+  private _initDataSource() {
     this.dataSource = new ApiDataSource(this.ds.api, this.type, this.pageSize, true);
     this.dataSource.id = this.id;
     this.dataSource.listOptions.withHierarchy = this.treeNodesVisible;
-  }
-
-  private usSubscriptionHandler(settings: IUserSettings[]) {
-    this.usApplyUserSettings(settings);
   }
 
   private pageSizeSubscriptionHandler(pageSize: number) {
@@ -247,7 +284,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
 
   private docSubscriptionHandler(doc: DocumentBase) {
-
     this.id = doc.id;
     const exist = (this.dataSource.renderedDataList).find(d => d.id === doc.id);
     if (exist) {
@@ -288,12 +324,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     else tree.filter(el => el.children.length).forEach(node => this.findSelectedNode(node.children, id));
   }
 
-  private setFilters() {
-    this.settings.filter
-      .filter(c => !(c.right == null || c.right === undefined) && c.isActive)
-      .forEach(f => this.setColumnFilter(f.left, f));
-  }
-
   private setSortOrder() {
     this.multiSortMeta = this.settings.order
       .filter(e => !!e.order)
@@ -304,45 +334,103 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     }
   }
 
-  private setSettingsFilter(field: string, _filter: FormListFilter) {
-    const settingsFilter = this.settings.filter.find(e => e.left === field);
-    if (settingsFilter) {
-      settingsFilter.isActive = _filter.isActive;
-      settingsFilter.center = _filter.center;
-      settingsFilter.right = _filter.right;
-    } else
-      this.settings.filter.push({ ..._filter });
+  private setSettingsFilter(_filter: FormListFilter) {
+    this.settings.filter = [_filter, ...this.settings.filter.filter(e => e.left !== _filter.left)];
+    // let settingsFilter = this.settings.filter.find(e => e.left === field);
+    // if (settingsFilter) {
+    //   settingsFilter = { ...settingsFilter, ..._filter };
+    // } else
+    //   this.settings.filter.push({ ..._filter });
   }
 
-  private _update(_filter: FormListFilter) {
-    if (!_filter.left) return;
-    if ((Array.isArray(_filter.right)) && _filter.right[1]) { _filter.right[1].setHours(23, 59, 59, 999); }
-    this.setColumnFilter(_filter.left, _filter);
-    this.setSettingsFilter(_filter.left, _filter);
-    this.prepareDataSource(this.multiSortMeta);
-    this._pageSize$.next(this.getPageSize());
+  addFilterToSettings(_filter: FormListFilter, settingsId: string) {
+    const state = this._usStateByKind('filter');
+    const settings = state.settings.find(e => e.id === settingsId);
+    if (!settings) return;
+    settings.settings.filter = [...(settings.settings.filter || [].filter(e => e.left !== _filter.left)), _filter];
+    this._usNextState({ ...state, apply: state.selected.id === settingsId }, 'filter');
   }
 
   setColumnFilterIsActive(column: ColumnDef, isActive: boolean) {
     if (!column.filter) return;
     column.filter.isActive = isActive;
+    this._filterSettingsState$.next({ ...this._filterSettingsState$.value, isModify: true, apply: false });
     this._debonce$.next(column.filter);
   }
 
   _onColumnMatchOperatorChanged(column: ColumnDef) {
-    column.filter = { ...column.filter, center: column.anyTemp.value };
-    if (column.filter.isActive) this.update(column, column.filter.right, column.filter.center);
+    const newFilter = { ...column.filter, center: column.filter['anyTemp'].value };
+    const isINOperator = ['in', 'not in'].includes(newFilter.center);
+    if (['in', 'not in'].includes(newFilter.center)) newFilter.right = newFilter.right ? [newFilter.right] : [];
+    if (['in', 'not in'].includes(column.filter.center) && !['in', 'not in'].includes(newFilter.center))
+      newFilter.right = Array.isArray(newFilter.right) ? newFilter.right[0] : newFilter.right;
+    if (column.filter.center === 'beetwen' && newFilter.center !== 'beetwen')
+      newFilter.right = newFilter.right.start || newFilter.right.start === 0 ? newFilter.right.start : null;
+    newFilter.isActive = false;
+    column.filter = newFilter;
+    this._filterSettingsState$.next({ ...this._filterSettingsState$.value, isModify: true, apply: false });
   }
 
-  update(column: ColumnDef, event, center = 'like' as matchOperator) {
+  private _update(_filter: FormListFilter) {
+    if (!_filter.left) return;
+    this.setColumnFilter(_filter);
+    this.setSettingsFilter(_filter);
+    this.prepareDataSource(this.multiSortMeta);
+    this._pageSize$.next(this.getPageSize());
+  }
+
+  update(column: ColumnDef, right: any, center: matchOperator = 'like', startEnd = 'start' || 'end') {
+
     if (!column) return;
-    if (!event || (typeof event === 'object' && !event.value && !(event instanceof Date) && !(Array.isArray(event)))) {
-      if (typeof event !== 'boolean') event = null;
+
+    const oldF = column.filter;
+    const newF = { ...column.filter, center, right, anyTemp: { label: center, value: center } };
+
+    if (column.type === 'number') {
+      if (center === 'beetwen') {
+        newF.interval[startEnd] = newF.right;
+        const { start, end } = newF.interval;
+        if (start === null || end === null) return;
+        const intervalFloat = {
+          start: parseFloat(start.toString()),
+          end: parseFloat(end.toString())
+        };
+        if (isNaN(intervalFloat.start) || isNaN(intervalFloat.end)) return;
+        if (intervalFloat.start > intervalFloat.end) return;
+        newF.right = { ...intervalFloat };
+        newF.isActive = true;
+      } else if (isNaN(parseFloat(newF.right.toString())))
+        newF.right = null;
+      newF.isActive = !!newF.right || newF.right === 0;
+    } else if (column.type === 'boolean') {
+      newF.isActive = newF.right !== null;
+    } else if (column.type.includes('.') && !['in', 'not in'].includes(center)) {
+      if (['is not null', 'is null'].includes(center))
+        newF.right = null;
+      else
+        newF.isActive = !!newF.right;
+    } else if (['in', 'not in'].includes(center)) {
+      if (Array.isArray(newF.right) &&
+        Array.isArray(oldF.right) &&
+        oldF.right.map(e => e.id).join() === newF.right.map(e => e.id).join()) return; // same array
+      newF.isActive = Array.isArray(newF.right) && newF.right.length > 0;
+    } else if (['date', 'datetime'].includes(column.type) && newF.right && center === 'beetwen') {
+      if ((Array.isArray(newF.right) && (!newF.right[0] || !newF.right[1]))) return;
+      newF.right[1].setHours(23, 59, 59, 999);
+      newF.isActive = !!newF.right;
+    } else {
+      newF.isActive = !!newF.right;
     }
-    this._debonce$.next({ left: column.field, right: event, center: center || column.filter.center || '=', isActive: !!event });
+
+    if (this.filterSettingsState.isReadonly) this.copySettings('filter');
+    this._usNextState({ ...this.filterSettingsState, isModify: true, apply: false }, 'filter');
+    if (!newF.isActive && newF.isActive === oldF.isActive) return;
+
+    this._debonce$.next(newF);
   }
 
   onLazyLoad(event: { multiSortMeta: SortMeta[]; }) {
+    if (!this._isInitComplete$.value) return;
     this.multiSortMeta = event.multiSortMeta;
     this.prepareDataSource();
     if (this.id) this.goto(this.id);
@@ -400,10 +488,14 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   private prepareDataSource(multiSortMeta: SortMeta[] = this.multiSortMeta) {
     this.dataSource.id = this.id;
-    const order = (multiSortMeta || [])
-      .map(el => <FormListOrder>({ field: el.field, order: el.order === -1 ? 'desc' : 'asc' }));
-    const listSettigns: FormListSettings = { filter: [...this.activeFilters], order };
-    this.dataSource.formListSettings = listSettigns;
+    this.dataSource.formListSettings = {
+      filter: [...(this.activeFilters || []).map(e => ({
+        left: e.left,
+        center: e.center,
+        right: ['in', 'not in'].includes(e.center) ? e.right.map(el => `'${el.id}'`).join(',') : e.right
+      }))],
+      order: (multiSortMeta || []).map(el => <FormListOrder>({ field: el.field, order: el.order === -1 ? 'desc' : 'asc' }))
+    };
     const treeNodesVisibleBefore = this.treeNodesVisible;
     this.treeNodesVisible = this._presentation !== 'List' && this.hierarchy && !this.activeFilters.length;
     this.dataSource.listOptions.withHierarchy = this.treeNodesVisible;
@@ -414,23 +506,25 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return this.getColumn(field).filter;
   }
 
-  setColumnFilter(field: string, _filter: FormListFilter) {
-    return this.getColumn(field).filter = _filter;
+  setColumnFilter(_filter: FormListFilter) {
+    const col = this.getColumn(_filter.left);
+    if (!col) return;
+    // this.columns[this.columns.indexOf(col)] = { ...col, filter: _filter };
+    return this.getColumn(_filter.left).filter = { ..._filter };
   }
 
   getColumn(field: string) {
     if (!field) return null;
     const res = this.columns.find(e => e.field === field);
-    if (!res) console.error('Unknow column: ' + field);
+    // if (!res) console.error('Unknow column: ' + field);
     return res;
   }
-
 
   private setContextMenu(columns: ColumnDef[]) {
 
     const qFilterCommand = {
       label: 'Quick filter', icon: 'pi pi-search',
-      command: (event) => this._update({ left: this.ctxData.column, right: this.ctxData.value, center: '=', isActive: true })
+      command: (event) => this.update(this.getColumn(this.ctxData.column), this.ctxData.value, '=')
     };
 
     const selectAllCommand = {
@@ -456,7 +550,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   clearAllFilters() {
     this.activeFilters.forEach(f => f.isActive = false);
-    if (!this.showDeleted) this.showDeletedSet(false);
+    if (this.showDeleted) this.showDeletedSet(false);
     this.prepareDataSource(); this.goto(this.id);
   }
 
@@ -470,9 +564,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   private getCurrentParent() {
     const result = { parent: null };
-    if (this.treeNodesVisible && this.selectedData) {
+    if (this.treeNodesVisible && this.selectedData)
       result.parent = this.selectedData.isfolder ? this.selectedData.id : this.selectedData.parent.id;
-    }
     return result;
   }
 
@@ -536,22 +629,10 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     };
 
     this.addMenuItems = [
-      { label: 'Reset view', command: () => { this._resetTables(); } },
-      { separator: true },
       { label: 'Clear filters', command: () => { this.clearAllFilters(); } },
       { separator: true },
       { label: 'Show deleted', id: 'ShowDeleted', command: () => { this.showDeletedSet(!this.showDeleted, true); } },
-      { separator: true },
-      {
-        label: 'Settings', items: [
-          { label: 'Load', command: () => this.usLoad() },
-          { label: 'Save', command: () => this.usSaveCurrentSettings('columns') },
-          { label: 'Default', command: () => this.uss.resetSelectedSettings() },
-          // {
-          //   label: 'Columns...', command: () => this._showColumnsSettingsDialog()
-          // }
-        ]
-      },
+
     ];
     if (this.hierarchy) this.addMenuItems = [viewMenuItems, { separator: true }, ...this.addMenuItems];
   }
@@ -563,7 +644,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   showDeletedSet(showDeleted: boolean, update = false) {
     this.showDeleted = showDeleted;
     this.addMenuItems.find(e => e.id === 'ShowDeleted').label = `${this.showDeleted ? 'Hide' : 'Show'} deleted`;
-    this.setColumnFilter('deleted', { left: 'deleted', isActive: this.showDeleted, center: '=', right: false });
+    this.setColumnFilter({ left: 'deleted', isActive: this.showDeleted, center: '=', right: false });
     if (update) {
       this.prepareDataSource(this.multiSortMeta);
       this._pageSize$.next(this.getPageSize());
@@ -573,7 +654,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   setPresentationMode(mode: string = 'List' || 'Tree' || '') {
     this._presentation = mode;
     this.onChangePresentation();
-
   }
 
   onChangePresentation() {
@@ -609,25 +689,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     else this.id = null;
   }
 
-  parentChange(event) {
-    this.id = null;
-    const column = this.getColumn('parent');
-    if (!column) return;
-    column.filter = {
-      isActive: true,
-      left: 'parent',
-      center: '=',
-      right: event && event.data && event.data.id ? {
-        id: event.data.id,
-        code: '',
-        type: this.type,
-        description: event.data.description
-      } : null
-    };
-    this.prepareDataSource();
-    this.dataSource.sort();
-  }
-
   onContextMenuSelect(event) {
     let el = (event.originalEvent as MouseEvent).target as any;
     if (!el) return;
@@ -639,24 +700,16 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.id = dataStorage.id;
   }
 
-  first() {
-    // this.selection = [];
+  private listen(first: boolean) {
     this.dataSource.result$.pipe(take(1)).subscribe(d => {
-      if (d.length > 0 && !this.treeNodesVisible) this.id = d[0].id;
-    });
-    this.dataSource.first();
-  }
-
-  private listen() {
-    // this.selection = [];
-    this.dataSource.result$.pipe(take(1)).subscribe(d => {
-      if (d.length > 0 && !this.treeNodesVisible) this.id = d[d.length - 1].id;
+      if (d.length > 0 && !this.treeNodesVisible) this.id = d[first ? 0 : d.length - 1].id;
     });
   }
 
-  last() { this.listen(); this.dataSource.last(); }
-  prev() { this.listen(); this.dataSource.prev(); }
-  next() { this.listen(); this.dataSource.next(); }
+  first() { this.listen(true); this.dataSource.first(); }
+  last() { this.listen(false); this.dataSource.last(); }
+  prev() { this.listen(false); this.dataSource.prev(); }
+  next() { this.listen(false); this.dataSource.next(); }
 
   private listenRefresh(id: string) {
     // this.selection = [];
@@ -677,26 +730,13 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.dataSource.goto(id);
   }
 
-  ngOnDestroy() {
-    this._docSubscription$.unsubscribe();
-    this._routeSubscription$.unsubscribe();
-    this._debonceSubscription$.unsubscribe();
-    this._debonce$.complete();
-    this._pageSize$.complete();
-    this._pageSizeSubscription$.unsubscribe();
-    this._resizeSubscription$.unsubscribe();
-    this._usSubscription$.unsubscribe();
-    this._columnsSettingsDialogRef.close();
-    // if (!this.route.snapshot.queryParams.goto) { this.saveUserSettings(); }
-  }
-
 
   onColResize(event) {
+    if (this.columnsSettingsState.isReadonly) this.copySettings('columns');
     const col = this._getColumnByElement(event.element);
     if (!col) console.log('Unknow col: ' + event.element.outerText);
     this.settings.columns.width[col.field] = `${event.element.offsetWidth}px`;
-    // col.style['width'] = this.settings.columns.width[col.field];
-    // this.uss.isModify = true;
+    this._columnsSettingsState$.next({ ...this._columnsSettingsState$.value, isModify: true, apply: false });
   }
 
   private _getColumnByElement(element: { outerText: string, offsetWidth: number }): ColumnDef {
@@ -705,33 +745,37 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   onColReorder(event) {
+    if (this.columnsSettingsState.isReadonly) this.copySettings('columns');
     this.settings.columns.order = event.columns.map(e => e.field);
     this.usApplyColumnsProps();
-    // this.uss.isModify = true;
+    this._columnsSettingsState$.next({ ...this._columnsSettingsState$.value, isModify: true, apply: false });
   }
 
-  usApplyUserSettings(settings: IUserSettings[]) {
+  private onFilterSettingsStateChanged(state: IUserSettingsState) {
+    if (!state.settings || !state.apply) return;
+    this.settings = { ...this.settings, filter: state.selected.settings.filter };
+    this._resetColumnsFilters();
+    this.prepareDataSource(this.multiSortMeta);
+    this._isInitComplete$.next(true);
+    this._pageSize$.next(this.getPageSize());
+    this._filterSettingsState$.next({ ...this._filterSettingsState$.value, apply: false });
+  }
 
-    this.settings = {
-      columns: settings.find(e => e.kind === 'columns').settings.columns,
-      filter: settings.find(e => e.kind === 'filter').settings.filter,
-      order: settings.find(e => e.kind === 'columns').settings.order,
-    };
-
-    this.setFilters();
+  private onColumnsSettingsStateChanged(state: IUserSettingsState) {
+    if (!state.settings || !state.apply) return;
+    this.settings = { ...this.settings, columns: state.selected.settings.columns, order: state.selected.settings.order };
     this.setSortOrder();
     this.usApplyColumnsProps();
     this.prepareDataSource(this.multiSortMeta);
     this._pageSize$.next(this.getPageSize());
+    this._columnsSettingsState$.next({ ...this._columnsSettingsState$.value, apply: false });
   }
 
   private usApplyColumnsProps() {
-
     this.columns = [
       ...this.settings.columns.order.map(field => this.columns.find(e => e.field === field)),
       ...this.columns.filter(col => !this.settings.columns.order.includes(col.field))
     ];
-
     for (const column of this.columns.filter(e => e.style && typeof e.style !== 'string')) {
       const colStyle = { ...column.style as any };
       for (const prop of this._columnSettingsProps) {
@@ -743,57 +787,190 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
           colStyle[prop] = propVal;
       }
       column.style = colStyle;
-      // this._resetTables();
     }
   }
 
-  _usOnUserSettingsBlur(event: any, dialog: any, isFilter = false) {
-    if (this.uss.readonly || typeof dialog.value !== 'string') return;
-    let settingsDesc = typeof dialog.value === 'string' ? dialog.value : dialog.value.description;
-    if (!settingsDesc) settingsDesc = '<unnamed>';
-    if (isFilter && this.uss.allSettingsFilter.find(e => e.id === this.uss.selectedSettingsFilter.id).description !== settingsDesc)
-      this.uss.isModifyFilter = true;
-    else if (!isFilter && this.uss.allSettings.find(e => e.id === this.uss.selectedSettings.id).description !== settingsDesc)
-      this.uss.isModify = true;
-  }
-
-  _usOnUserSettingsChange(event: any, dialog: any) {
-    if (typeof event.value === 'string') return;
-    this.uss.selectedSettings = event.value;
-  }
-
-  usSaveCurrentSettings(kind: 'columns' | 'filter') {
-    this.uss.setSelectedSettings({ ...this.uss.selectedSettings, settings: this._getCurrentFormListSettings(), kind });
-  }
-
-  invertColumnHidden(column: ColumnDef) {
+  usColumnsInvertHidden(column: ColumnDef) {
+    if (this.columnsSettingsState.isReadonly) this.copySettings('columns');
     column.hidden = !column.hidden;
-    this.uss.isModify = true;
+    this._usNextState({ ...this._columnsSettingsState$.value, isModify: true }, 'columns');
+  }
+
+  _usOnUserSettingsChange(event: any, kind: settingsKind) {
+    const state = this._usStateByKind(kind);
+    let newState: IUserSettingsState;
+    if (typeof event.value === 'string') {
+      state.settings.find(e => e.id === state.selected.id).description = event.value;
+      newState = {
+        ...state,
+        selected: { ...state.selected, description: event.value },
+        isModify: true,
+        apply: false,
+        settings: [...state.settings]
+      };
+    } else
+      newState = { ...state, selected: { ...event.value }, apply: true, isReadonly: !event.value.id };
+    this._usNextState(newState, kind);
+  }
+
+  _usStateByKind(kind: settingsKind) {
+    switch (kind) {
+      case 'filter':
+        return this.filterSettingsState;
+      case 'columns':
+        return this.columnsSettingsState;
+      default:
+        return undefined;
+    }
+  }
+
+  copySettings(kind: settingsKind) {
+    const state = this._usStateByKind(kind);
+    if (!state) return;
+    const getUniqueSettingsName = (index) => {
+      const name = `${state.selected.description.replace('(copy 1)', '').trim()} (copy ${index})`;
+      return state.settings.find(e => e.description.trim() === name) ? getUniqueSettingsName(++index) : name;
+    };
+    const newSettings = { ...state.selected, description: getUniqueSettingsName(1), id: v4().toLocaleUpperCase(), timestamp: null };
+    const newState: IUserSettingsState = {
+      ...state,
+      apply: false,
+      isReadonly: false,
+      isNew: true,
+      isModify: true,
+      settings: [...state.settings, newSettings],
+      selected: newSettings
+    };
+    this._usNextState(newState, kind);
+  }
+
+  deleteSettingsConfirmationHandler(kind: settingsKind, confirmed: boolean) {
+    if (!confirmed) return;
+    this.deleteSelectedSettings(kind, false);
+  }
+
+  deleteSelectedSettings(kind: settingsKind, withConfirmation = true) {
+    const state = this._usStateByKind(kind);
+    if (!state || state.isReadonly) return;
+
+    if (withConfirmation)
+      this.ds.confirmationService.confirm({
+        header: 'Delete settings?',
+        message: state.selected.description,
+        icon: 'fa fa-question-circle',
+        accept: this.deleteSettingsConfirmationHandler.bind(this, kind, true),
+        reject: this.deleteSettingsConfirmationHandler.bind(this, kind, false),
+        key: this.id
+      });
+    else
+      this.uss.deleteSettings(state.selected).then(e => {
+        const newSettings = [
+          ...state.settings.filter(el => el.id !== state.selected.id)
+        ];
+        const newState: IUserSettingsState = {
+          selected: newSettings[0],
+          settings: newSettings,
+          isReadonly: !newSettings[0].id,
+          isNew: false,
+          isModify: false,
+          apply: true
+        };
+        this._usNextState(newState, kind);
+      });
+  }
+
+  usSaveCurrentSettings(kind: settingsKind) {
+    const state = this._usStateByKind(kind);
+    if (!state || (state.isReadonly && (!state.isModify && kind !== 'filter'))) return;
+    if (state.settings.find(e => e.description === state.selected.description && e.id !== state.selected.id)) {
+      this.ds.openSnackBar('warning', 'Can\'t save', `The name "${state.selected.description}" is already in use`);
+      return;
+    }
+    const selected = { ...state.selected, settings: this._getCurrentFormListSettings(kind) };
+
+    if (kind === 'filter')
+      selected.settings.filter = selected.settings.filter
+        .filter(e => e.isActive)
+        .map(e => ({ left: e.left, center: e.center, right: e.right }));
+
+    this.uss.saveSettings([selected]).then(saved => {
+      const newState: IUserSettingsState = {
+        ...state,
+        selected: saved[0],
+        settings: [saved[0], ...state.settings.filter(settings => settings.id !== saved[0].id)],
+        isReadonly: false,
+        isNew: false,
+        isModify: false,
+        apply: false
+      };
+      this._usNextState(newState, kind);
+    });
+  }
+
+  _usNextState(state: IUserSettingsState, kind: settingsKind) {
+    if (kind === 'columns')
+      this._columnsSettingsState$.next(state);
+    if (kind === 'filter')
+      this._filterSettingsState$.next(state);
+  }
+
+  private usGetSettingsType() {
+    return `${this.type}${this.group ? '/group/' + this.group : ''}`;
   }
 
   private usLoad() {
-    this.uss.loadSettings(this.type, this._userEmail, this.usGetDefaultSettings());
+    this.uss.loadSettings(this.usGetSettingsType(), this._userEmail, '', this.usGetDefaultSettings()).then(
+      savedSettings => {
+        const stateFromSettings = (settings: IUserSettings[]) => {
+          this._usNextState({
+            settings: settings,
+            selected: settings[0],
+            isModify: false,
+            isNew: false,
+            isReadonly: !settings[0].id,
+            apply: true
+          }, settings[0].kind);
+        };
+        const fSet = savedSettings.filter(e => e.kind === 'filter');
+        fSet.filter(e => !!e.id).forEach(e => e.settings.filter.forEach(f => f.isActive = true));
+        stateFromSettings(savedSettings.filter(e => e.kind === 'columns'));
+        stateFromSettings(fSet);
+      }
+    );
   }
 
-  usGetDefaultSettings(): IUserSettings {
-    return {
-      readonly: true,
-      type: this.type,
+  private usGetDefaultSettings(): IUserSettings[] {
+    const allSettings = {
+      type: this.usGetSettingsType(),
       user: this._userEmail,
       description: 'Default',
       id: '',
       settings: this._getCurrentFormListSettings()
     };
+    return [
+      {
+        ...allSettings,
+        settings: { filter: allSettings.settings.filter, order: [] },
+        kind: 'filter'
+      },
+      {
+        ...allSettings,
+        settings: { filter: [], order: allSettings.settings.order, columns: allSettings.settings.columns },
+        kind: 'columns'
+      }
+    ];
+
   }
 
-  private _getCurrentFormListSettings(): FormListSettings {
-
-    return {
-      filter: this.activeFilters,
-      order: ((<SortMeta[]>this.multiSortMeta) || [])
-        .map(o => <FormListOrder>{ field: o.field, order: o.order === 1 ? 'asc' : 'desc' }),
-      columns: this._getCurrentFormListSettingsColumns()
-    };
+  private _getCurrentFormListSettings(kind?: settingsKind): FormListSettings {
+    const res: FormListSettings = { filter: [], order: [] };
+    if (kind === 'filter' || !kind) res.filter = [...this.allFilters];
+    if (kind === 'columns' || !kind) {
+      res.order = ((<SortMeta[]>this.multiSortMeta) || [])
+        .map(o => <FormListOrder>{ field: o.field, order: o.order === 1 ? 'asc' : 'desc' });
+      res.columns = this._getCurrentFormListSettingsColumns();
+    }
+    return res;
   }
 
   private _getCurrentFormListSettingsColumns(): FormListColumnProps {
@@ -806,4 +983,17 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return res;
   }
 
+  ngOnDestroy() {
+    this._docSubscription$.unsubscribe();
+    this._routeSubscription$.unsubscribe();
+    this._debonceSubscription$.unsubscribe();
+    this._pageSizeSubscription$.unsubscribe();
+    this._resizeSubscription$.unsubscribe();
+    this._columnsSettingsStateSubscription$.unsubscribe();
+    this._filterSettingsStateSubscription$.unsubscribe();
+    this._debonce$.complete();
+    this._pageSize$.complete();
+  }
+
 }
+

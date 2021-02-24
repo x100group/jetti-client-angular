@@ -230,9 +230,9 @@ export class ApiService {
     return (this.http.post(query, value) as Observable<boolean>);
   }
 
-  getUserSettings(type: string, user: string): Promise<IUserSettings[]> {
-    const query = `${environment.api}user/settings/${type}/${user}`;
-    return this.http.get<IUserSettings[]>(query).toPromise();
+  getUserSettings(type: string, user: string, id = ''): Promise<IUserSettings[]> {
+    const query = `${environment.api}user/settings`;
+    return (this.http.post<IUserSettings[]>(query, { command: 'get', type, user, id }).toPromise());
   }
 
   saveUserSettings(settings: IUserSettings[]): Promise<IUserSettings[]> {
@@ -247,6 +247,7 @@ export class ApiService {
   }
 
   deleteUserSettings(id: string): Promise<void> {
+    if (!id) return;
     const query = `${environment.api}user/settings`;
     return this.http.post<void>(query, { command: 'delete', id }).toPromise<void>();
   }

@@ -30,9 +30,13 @@ import { HistoryComponent } from '../common/history/history.component';
 import { DescendantsComponent } from '../common/descendants/descendants.component';
 import { TransformedRegisterMovementsComponent } from '../x100/transformed.register.movements.component';
 import { DialogService } from 'primeng/api';
+import { InputValueDialogComponent } from './../dialog/input-value.dialog.component';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { JNgSelectComponent } from '../common/multiselect/ng.select.component';
 
 @NgModule({
   declarations: [
+
     HomeComponent,
     TabControllerComponent,
 
@@ -52,6 +56,8 @@ import { DialogService } from 'primeng/api';
     TablePartsComponent,
     SuggestDialogComponent,
     SuggestDialogHierarchyComponent,
+    InputValueDialogComponent,
+    JNgSelectComponent,
 
     RegisterAccountMovementsComponent,
     RegisterAccumulationComponent,
@@ -67,6 +73,7 @@ import { DialogService } from 'primeng/api';
 
   ],
   imports: [
+    NgSelectModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -88,6 +95,7 @@ import { DialogService } from 'primeng/api';
     DynamicComponent,
     DynamicFormControlComponent,
     AutocompleteComponent,
+    JNgSelectComponent,
 
     DisableControlDirective,
 
@@ -100,6 +108,7 @@ import { DialogService } from 'primeng/api';
     TablePartsComponent,
     SuggestDialogComponent,
     SuggestDialogHierarchyComponent,
+    InputValueDialogComponent,
 
     RegisterAccountMovementsComponent,
     RegisterAccumulationComponent,
@@ -120,6 +129,7 @@ import { DialogService } from 'primeng/api';
   ],
   entryComponents: [
     SuggestDialogComponent,
+    InputValueDialogComponent,
     HomeComponent,
     BaseDocFormComponent,
     BaseFormComponent,

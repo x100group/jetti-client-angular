@@ -82,7 +82,6 @@ import { SidebarModule } from 'primeng/sidebar';
     // DragDropModule,
     ProgressBarModule,
     ProgressSpinnerModule,
-    // MultiSelectModule,
     // InplaceModule,
     // BlockUIModule,
     ToastModule,
