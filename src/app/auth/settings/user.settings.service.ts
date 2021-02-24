@@ -1,65 +1,45 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
-import { filter, take } from 'rxjs/operators';
-import { FormListSettings, UserDefaultsSettings, UserSettings } from 'jetti-middle/dist';
+import { IUserSettings } from 'jetti-middle/dist/common/classes/user-settings';
+import { MessageService } from 'primeng/api';
 import { ApiService } from '../../services/api.service';
 
-export interface FormListSettingsAction { type: string; payload: FormListSettings; }
-
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class UserSettingsService {
 
-  userSettings = new UserSettings();
-  userDefaultsSettings$ = new Subject<UserDefaultsSettings>();
-  formListSettings$ = new Subject<FormListSettingsAction>();
+  constructor(private api: ApiService, private messageService: MessageService) { }
 
-  constructor(private api: ApiService) {
-    this.selectUserDefaultsSettings();
+  async loadSettings(type: string, user: string, id?: string, defaultSettings?: IUserSettings[]) {
+    const savedSettings = await this.api.getUserSettings(type, user, id);
+    return [...savedSettings || [], ...defaultSettings || []];
   }
 
-  selectUserDefaultsSettings() {
-    if (this.userSettings.defaults) {
-      this.userDefaultsSettings$.next(this.userSettings.defaults);
+  async deleteSettings(settings: IUserSettings) {
+    this.api.deleteUserSettings(settings.id).then(_ => this.showSuccessMessage(`Settings "${settings.description}" is deleted`));
+  }
+
+  async saveSettings(settings: IUserSettings[]) {
+    const savedSettings = await this.api.saveUserSettings(settings);
+    for (const set of savedSettings) {
+      this.showSuccessMessage(`Settings ${set.description} is saved`);
     }
-    this.api.getUserDefaultsSettings().pipe(
-      take(1))
-      .subscribe(data => {
-        this.userSettings.defaults = data;
-        this.userDefaultsSettings$.next(data);
-      });
+    return savedSettings;
   }
 
-  setUserDefaultsSettings(value: UserDefaultsSettings) {
-    this.api.setUserDefaultsSettings(value).pipe(
-      take(1),
-      filter(s => s === true))
-      .subscribe(s => {
-        this.userSettings.defaults = value;
-        this.userDefaultsSettings$.next(value);
-      });
+  getSettingsFromCache(id: string) {
+    if (!id) return null;
+    const settings = localStorage.getItem(this.settingsCacheKey(id));
+    return settings ? JSON.parse(settings) as IUserSettings : null;
   }
 
-  selectFormListSettings(type: string) {
-    if (this.userSettings.formListSettings[type]) {
-      this.formListSettings$.next({ type: type, payload: this.userSettings.formListSettings[type] });
-    } else {
-      this.api.getUserFormListSettings(type).pipe(
-        take(1))
-        .subscribe(s => {
-          this.userSettings.formListSettings[type] = s || new FormListSettings();
-          this.formListSettings$.next({ type: type, payload: s });
-        });
-    }
+  cacheSettings(settings: IUserSettings) {
+    return localStorage.setItem(this.settingsCacheKey(settings.id), JSON.stringify(settings));
   }
 
-  setFormListSettings(type: string, value: FormListSettings) {
-    this.api.setUserFormListSettings(type, value).pipe(
-      take(1),
-      filter(s => s === true))
-      .subscribe(s => {
-        this.userSettings.formListSettings[type] = value;
-        this.formListSettings$.next({ type: type, payload: value });
-      });
+  settingsCacheKey(id: string) {
+    return `formSettings: ${id} `;
   }
 
+  private showSuccessMessage(summary: string, detail = '') {
+    this.messageService.add({ severity: 'success', summary, detail, key: '1' });
+  }
 }

@@ -20,7 +20,7 @@ export class AuthService {
   isAdmin$ = this.userProfile$.pipe(map(u => u.account.isAdmin));
   userRoles$ = this.userProfile$.pipe(map(u => u.account.roles));
   get userProfile() { return this._userProfile$.value; }
-
+  get userEmail() { return this.tokenPayload ? this.tokenPayload['email'] : ''; }
   get token() { return localStorage.getItem('jetti_token') || ''; }
   set token(value) { localStorage.setItem('jetti_token', value); }
   get tokenPayload() { return jwt_decode<JwtPayload>(this.token); }
@@ -58,21 +58,33 @@ export class AuthService {
   public isRoleAvailable(roleName: string): boolean {
     if (!this.token) return false;
     const token = this.tokenPayload as { roles: string[] };
-    return token.roles.indexOf(roleName) !== -1;
+    return token.roles.includes(roleName);
   }
 
-  public getUserEnviromentValueByKey(envKey: string): string {
+  public getUserView(envKey: string): string {
     if (!this.token || !envKey) return '';
-    const token = this.tokenPayload as { env: { [x: string]: string } };
-    return token.env[envKey];
+    return this.tokenPayload['view'];
+  }
+
+  public getUserEnviromentSettingsValueByKey(envKey: string): string {
+    if (!this.token || !envKey) return '';
+    return this.tokenPayload['settings'][envKey];
   }
 
   public LOGIC_USECASHREQUESTAPPROVING(): boolean {
-    return this.getUserEnviromentValueByKey('LOGIC_USECASHREQUESTAPPROVING') === '1';
+    return this.getUserEnviromentSettingsValueByKey('LOGIC_USECASHREQUESTAPPROVING') === '1';
   }
 
   public isRoleAvailableReadonly(): boolean {
     return this.isRoleAvailable('Readonly');
+  }
+
+  public isRoleAvailableAllColumns(): boolean {
+    return this.isRoleAvailable('All columns');
+  }
+
+  public isRoleAvailableDepartmentCompanyEditor(): boolean {
+    return this.isRoleAvailable('Department company editor');
   }
 
   public isRoleAvailableOperationRulesDesigner(): boolean {

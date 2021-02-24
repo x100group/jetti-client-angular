@@ -40,7 +40,7 @@ export class DynamicFormControlComponent implements OnInit, OnDestroy {
 
     this.valueChanges$ = this.formControl.valueChanges.subscribe(async value => {
       this.change.emit(value);
-      if (this.form.root['metadata'].module) {
+      if (this.form.root['metadata'] && this.form.root['metadata'].module) {
         const func = new Function('', this.form.root['metadata'].module).bind(this)();
         const method = func[this.control.key + '_OnChange'];
         if (method) await method();
@@ -55,8 +55,10 @@ export class DynamicFormControlComponent implements OnInit, OnDestroy {
             return func(doc, value, api, body);
             `);
           const patch = await func(this.form.getRawValue(), value, this.api, funcBody);
-          this.form.patchValue(patch || {});
-          this.cd.markForCheck();
+          if (patch !== undefined) {
+            this.form.patchValue(patch || {});
+            this.cd.markForCheck();
+          }
         }
 
         if (this.control.onChangeServer) {

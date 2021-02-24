@@ -15,6 +15,7 @@ import { IAttachmentsSettings, RefValue, DocListOptions, DocListResponse, DocLis
 import { Ref, IViewModel } from 'jetti-middle/dist';
 import { FormListOrder, FormListFilter, FormListSettings, UserDefaultsSettings } from 'jetti-middle/dist';
 import { AccountRegister } from 'jetti-middle/dist';
+import { IUserSettings } from 'jetti-middle/dist/common/classes/user-settings';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -227,6 +228,28 @@ export class ApiService {
   setUserDefaultsSettings(value: UserDefaultsSettings) {
     const query = `${environment.api}user/settings/defaults`;
     return (this.http.post(query, value) as Observable<boolean>);
+  }
+
+  getUserSettings(type: string, user: string, id = ''): Promise<IUserSettings[]> {
+    const query = `${environment.api}user/settings`;
+    return (this.http.post<IUserSettings[]>(query, { command: 'get', type, user, id }).toPromise());
+  }
+
+  saveUserSettings(settings: IUserSettings[]): Promise<IUserSettings[]> {
+    if (!settings || !settings.length) return Promise.resolve([]);
+    const query = `${environment.api}user/settings`;
+    return (this.http.post<IUserSettings[]>(query, { command: 'save', settings }).toPromise());
+  }
+
+  async getBankStatementTextByDocsId(id: Ref[]): Promise<string> {
+    const query = `${environment.api}getBankStatementTextByDocsId`;
+    return await this.http.post<string>(query, { id }, { headers: { charset: 'windows-1251' } }).toPromise();
+  }
+
+  deleteUserSettings(id: string): Promise<void> {
+    if (!id) return;
+    const query = `${environment.api}user/settings`;
+    return this.http.post<void>(query, { command: 'delete', id }).toPromise<void>();
   }
 
   getDocDimensions(type: string) {

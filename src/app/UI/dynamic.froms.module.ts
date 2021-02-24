@@ -11,7 +11,6 @@ import { RegisterInfoComponent } from '../common/register-movements/register.inf
 import { TabsStore } from '../common/tabcontroller/tabs.store';
 import { PrimeNGModule } from '../primeNG.module';
 import { AutocompleteComponent } from './../common/autocomplete/autocomplete.png.component';
-import { BaseDocListComponent } from './../common/datatable/base.list.component';
 import { TablePartsComponent } from './../common/datatable/table-parts.png.component';
 import { DocService } from './../common/doc.service';
 import { DynamicComponent, DynamicComponentDirective } from './../common/dynamic-component/dynamic-component';
@@ -30,9 +29,14 @@ import { DisableControlDirective } from '../common/directives/disabled-control';
 import { HistoryComponent } from '../common/history/history.component';
 import { DescendantsComponent } from '../common/descendants/descendants.component';
 import { TransformedRegisterMovementsComponent } from '../x100/transformed.register.movements.component';
+import { DialogService } from 'primeng/api';
+import { InputValueDialogComponent } from './../dialog/input-value.dialog.component';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { JNgSelectComponent } from '../common/multiselect/ng.select.component';
 
 @NgModule({
   declarations: [
+
     HomeComponent,
     TabControllerComponent,
 
@@ -43,7 +47,7 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
 
     DisableControlDirective,
 
-    BaseDocListComponent,
+    // BaseDocListComponent,
     BaseDocFormComponent,
     BaseFormComponent,
     BaseTreeListComponent,
@@ -52,6 +56,8 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
     TablePartsComponent,
     SuggestDialogComponent,
     SuggestDialogHierarchyComponent,
+    InputValueDialogComponent,
+    JNgSelectComponent,
 
     RegisterAccountMovementsComponent,
     RegisterAccumulationComponent,
@@ -67,6 +73,7 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
 
   ],
   imports: [
+    NgSelectModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -88,10 +95,11 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
     DynamicComponent,
     DynamicFormControlComponent,
     AutocompleteComponent,
+    JNgSelectComponent,
 
     DisableControlDirective,
 
-    BaseDocListComponent,
+    // BaseDocListComponent,
     BaseDocFormComponent,
     BaseFormComponent,
     BaseTreeListComponent,
@@ -100,6 +108,7 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
     TablePartsComponent,
     SuggestDialogComponent,
     SuggestDialogHierarchyComponent,
+    InputValueDialogComponent,
 
     RegisterAccountMovementsComponent,
     RegisterAccumulationComponent,
@@ -113,14 +122,15 @@ import { TransformedRegisterMovementsComponent } from '../x100/transformed.regis
     DescendantsComponent
   ],
   providers: [
+    DialogService,
     DynamicFormService,
     DocService,
     TabsStore,
   ],
   entryComponents: [
     SuggestDialogComponent,
+    InputValueDialogComponent,
     HomeComponent,
-    BaseDocListComponent,
     BaseDocFormComponent,
     BaseFormComponent,
     BaseTreeListComponent,

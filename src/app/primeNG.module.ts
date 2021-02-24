@@ -31,14 +31,17 @@ import { TreeTableModule } from 'primeng/treetable';
 import { SlideMenuModule } from 'primeng/slidemenu';
 import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
 import { DataViewModule } from 'primeng/dataview';
-import {FileUploadModule} from 'primeng/fileupload';
-import {ListboxModule} from 'primeng/listbox';
+import { FileUploadModule } from 'primeng/fileupload';
+import { ListboxModule } from 'primeng/listbox';
 import { TableModule } from './common/datatable/table';
+import { DynamicDialogModule } from 'primeng/dynamicdialog';
+import { SidebarModule } from 'primeng/sidebar';
 
 @NgModule({
   exports: [
     // SharedModule,
     // DataTableModule,
+    DynamicDialogModule,
     AutoCompleteModule,
     CalendarModule,
     ButtonModule,
@@ -46,7 +49,7 @@ import { TableModule } from './common/datatable/table';
     SpinnerModule,
     ConfirmDialogModule,
     DialogModule,
-    // SidebarModule,
+    SidebarModule,
     TooltipModule,
     AccordionModule,
     FieldsetModule,
@@ -79,7 +82,6 @@ import { TableModule } from './common/datatable/table';
     // DragDropModule,
     ProgressBarModule,
     ProgressSpinnerModule,
-    // MultiSelectModule,
     // InplaceModule,
     // BlockUIModule,
     ToastModule,
