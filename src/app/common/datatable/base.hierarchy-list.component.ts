@@ -18,24 +18,10 @@ import { DialogService, TreeNode } from 'primeng/api';
 import { TreeTable } from 'primeng/treetable';
 import {
   buildColumnDef, ColumnDef, DocumentBase, DocumentOptions, FormListFilter,
-  FormListOrder, FormListSettings, IViewModel, matchOperator, Type
+  FormListOrder, FormListSettings, IViewModel, matchOperator, Type, matchOperatorByType,
+  IUserSettings, FormListColumnProps, IUserSettingsState
 } from 'jetti-middle';
-import { matchOperatorByType } from 'jetti-middle/dist/common/types/common';
-import { IUserSettings } from 'jetti-middle/dist/common/classes/user-settings';
-import { FormListColumnProps } from 'jetti-middle/dist/common/classes/form-list';
-
-export const emptyComplexObject = { id: '00000000-0000-0000-0000-000000000000', type: '.', value: '', code: '' };
-
-export interface IUserSettingsState {
-  settings?: IUserSettings[];
-  selected?: IUserSettings;
-  isModify?: boolean;
-  isNew?: boolean;
-  isReadonly?: boolean;
-  apply?: boolean;
-}
-
-export type settingsKind = 'columns' | 'filter';
+import { settingsKind } from 'jetti-middle/dist/common/classes/user-settings';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -143,15 +129,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     { label: 'Auto', value: 'Auto' }
   ];
   _presentation = 'Auto';
-  _allColumns = this.auth.isRoleAvailableAllColumns();
   readonly = this.auth.isRoleAvailableReadonly();
   addMenuItems: MenuItem[];
   showActiveFilters = false;
-
-
-  getMatchOperatorsByType(type: string) {
-    return (matchOperatorByType[type] || matchOperatorByType['default']).map(e => ({ label: e, value: e }));
-  }
 
   async ngOnInit() {
 
@@ -251,7 +231,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
         col.filter = colFilter;
         col.filter['anyTemp'] = { label: colFilter.center, value: colFilter.center };
       } else {
-        const operators = this.getMatchOperatorsByType(col.type);
+        const operators = this.usGetMatchOperatorsByType(col.type);
         col.filter = new FormListFilter(col.field, operators[0].value);
         col.filter['anyTemp'] = operators[0];
       }
@@ -822,6 +802,10 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       default:
         return undefined;
     }
+  }
+
+  usGetMatchOperatorsByType(type: string) {
+    return (matchOperatorByType[type] || matchOperatorByType['default']).map(e => ({ label: e, value: e }));
   }
 
   copySettings(kind: settingsKind) {

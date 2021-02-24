@@ -42,7 +42,7 @@
               </td>
               <td style="width: 138px; text-align: center;">
                 <p-dropdown optionLabel="label" optionValue="center" [(ngModel)]="rowData.filter.anyTemp"
-                  [options]="getMatchOperatorsByType(rowData.type)"
+                  [options]="usGetMatchOperatorsByType(rowData.type)"
                   (ngModelChange)="_onColumnMatchOperatorChanged(rowData)" appendTo="body">
                 </p-dropdown>
               </td>
