@@ -1,10 +1,10 @@
 <div *ngIf="movements$ | async as item">
-  <h5 style="margin-bottom: 0px">Accounting register movements</h5>
+  <!-- <h5 style="margin-bottom: 0px">Accounting register movements</h5> -->
   <p-table [value]="item" [resizableColumns]="true">
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 24px"></th>
-        <th pResizableColumn style="width: 110px">date</th>
+        <th pResizableColumn style="width: 110px">date/company</th>
         <th pResizableColumn style="width: 60px">debit</th>
         <th pResizableColumn style="width: 200px">debet subcounts</th>
         <th pResizableColumn style="width: 50px">qty</th>
@@ -21,7 +21,14 @@
         <td>
           <i class="fa fa-check-circle" style="color: #5cb85c"></i>
         </td>
-        <td>{{item.date | date: 'dd.MM.y HH:mm:ss'}}</td>
+        <td>
+          <div style="min-height: 60px; text-align: center">
+            <div>.</div>
+            <div>{{item.date | date: 'dd.MM.y HH:mm:ss'}}</div>
+            <div>{{item.company.value}}</div>
+            <div>.</div> 
+          </div>
+        </td>
         <td style="width: 50px; font-weight: bolder; font-size: larger">{{item.debit.account}}</td>
         <td>
           <div style="min-height: 60px">
