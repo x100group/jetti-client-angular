@@ -19,7 +19,7 @@ import { TreeTable } from 'primeng/treetable';
 import {
   buildColumnDef, ColumnDef, DocumentBase, DocumentOptions, FormListFilter,
   FormListOrder, FormListSettings, IViewModel, matchOperator, Type, matchOperatorByType,
-  IUserSettings, FormListColumnProps, IUserSettingsState
+  IUserSettings, FormListColumnProps, IUserSettingsState,
 } from 'jetti-middle';
 import { settingsKind } from 'jetti-middle/dist/common/classes/user-settings';
 
@@ -102,7 +102,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     style: { width: '30px' }, order: 0, readOnly: false, required: false, hidden: false, value: undefined, headerStyle: {}
   });
 
-  private _windowWidth: number;
+  private _windowHeight: number;
 
   group = '';
   columns: ColumnDef[] = [];
@@ -182,9 +182,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       .subscribe(params => this.routeSubscruptionHandler());
 
     this._resizeSubscription$ = fromEvent(window, 'resize')
-      .pipe(filter(_ => window.outerWidth !== this._windowWidth))
+      .pipe(filter(_ => window.outerHeight !== this._windowHeight))
       .subscribe(_ => {
-        this._saveWindowWidth();
+        this._saveWindowHeigh();
         this._pageSize$.next(this.getPageSize());
       });
 
@@ -195,11 +195,11 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this._debonceSubscription$ = this._debonce$.pipe(debounceTime(1000))
       .subscribe(event => this._update(event));
     this.usLoad();
-    this._saveWindowWidth();
+    this._saveWindowHeigh();
   }
 
-  private _saveWindowWidth() {
-    this._windowWidth = window.outerWidth;
+  private _saveWindowHeigh() {
+    this._windowHeight = window.outerHeight;
   }
 
   private readRouteParams(route: ActivatedRoute) {
