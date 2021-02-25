@@ -66,13 +66,6 @@
               </div>
             </p-fieldset>
 
-            <div *ngFor="let control of v">
-              <div *ngIf="control.controlType === 'script' && control.key !== 'module' && control.key !== 'script' && control.key !== 'scriptAccounting'"
-                style="height: 400px; width: 100%;">
-                <j-control [control]="control" [form]="form"></j-control>
-              </div>
-            </div>
-
             <div *ngIf="tables$ | async as tables">
               <br *ngIf="tables.length">
               <p-tabView *ngIf="tables.length" class="tabViewClassInForm">
@@ -131,12 +124,14 @@
 
         <div *ngIf="!isHistory">
           <p-panel *ngIf="type === 'Catalog.Operation' && (isFolder$ | async) === false" [toggleable]="true"
-            header="Post script (management)" [collapsed]="true" (collapsedChange)="mp.collapse($event);" toggler="header">
+            header="Post script (management)" [collapsed]="true" (collapsedChange)="mp.collapse($event);"
+            toggler="header">
             <j-control *ngIf="vk.script" [control]="vk.script" [form]="form"></j-control>
           </p-panel>
 
           <p-panel *ngIf="type === 'Catalog.Operation' && (isFolder$ | async) === false" [toggleable]="true"
-            header="Post script (accounting)" [collapsed]="true" (collapsedChange)="mp.collapse($event);" toggler="header">
+            header="Post script (accounting)" [collapsed]="true" (collapsedChange)="mp.collapse($event);"
+            toggler="header">
             <j-control *ngIf="vk.scriptAccounting" [control]="vk.scriptAccounting" [form]="form"></j-control>
           </p-panel>
 
@@ -160,7 +155,8 @@
           <div *ngIf="(isFolder$ | async) === false">
             <div *ngFor="let r of relations$ | async">
               <p-panel [toggleable]="true" [collapsed]="true" #relation [header]="r.name" toggler="header">
-                <j-hierarchy-list *ngIf="!relation.collapsed && !r.type.startsWith('Register.')" [type]="r.type" [pageSize]=10
+                <j-hierarchy-list *ngIf="!relation.collapsed && !r.type.startsWith('Register.')" [type]="r.type"
+                  [pageSize]=10
                   [settings]="{order: [], filter: [
                   {left: r.field, center: '=', right: {id: viewModel.id, type: viewModel.type, value: viewModel.description}}]}">
                 </j-hierarchy-list>
