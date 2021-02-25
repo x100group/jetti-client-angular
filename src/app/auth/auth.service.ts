@@ -99,7 +99,7 @@ export class AuthService {
     return this.isRoleAvailable('Department editor');
   }
 
-  public isRoleAvailableisRoleAvailableResponsibilityCenterEditor(): boolean {
+  public isRoleAvailableResponsibilityCenterEditor(): boolean {
     return this.isRoleAvailable('Responsibility center editor');
   }
 
