@@ -150,7 +150,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this._initDataSource();
     this.addMenuItemsFill();
     this.setSortOrder();
-    this.showDeletedSet(false, false);
     this.prepareDataSource();
     this.setContextMenu(this.columns);
 
@@ -212,7 +211,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private _initColumns() {
-    if (this.data.metadata['Group']) this.settings.filter.push({ left: 'Group', center: '=', right: this.data.metadata['Group'] });
+    if (this.data.metadata['Group'])
+      this.settings.filter.push({ left: 'Group', center: '=', right: this.data.metadata['Group'], isActive: true });
+    this.settings.filter.push({ left: 'deleted', isActive: true, center: '=', right: false });
     this.columns = buildColumnDef(this.data.schema, this.settings);
     this.hierarchy = this.data.metadata.hierarchy === 'folders';
     this.treeNodesVisible = this.hierarchy && !this.settings.filter.length;
@@ -285,14 +286,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     } else this.dataSource.goto(doc.id);
   }
 
-  onFiltersEditInit() {
-
-  }
-
-  isNoFiltered() {
-    return this.activeFilters.length;
-  }
-
   private getPageSize() {
     return Math.max(Math.round((window.innerHeight - 270) / 28 - 1), 1);
   }
@@ -309,8 +302,11 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       .filter(e => !!e.order)
       .map(e => <SortMeta>{ field: e.field, order: e.order === 'asc' ? 1 : -1 });
     if (this.multiSortMeta.length === 0) {
-      if (this.isCatalog) this.multiSortMeta.push({ field: 'description', order: 1 });
-      if (this.isDoc) this.multiSortMeta.push({ field: 'date', order: 1 });
+      if (this.isCatalog)
+        this.multiSortMeta.push({ field: 'description', order: 1 });
+      if (this.isDoc)
+        this.multiSortMeta.push({ field: 'date', order: -1 });
+      this.settings.order = this.multiSortMeta.map(e => ({ field: e.field, order: e.order === 1 ? 'asc' : 'desc' }));
     }
   }
 
@@ -327,7 +323,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     const state = this._usStateByKind('filter');
     const settings = state.settings.find(e => e.id === settingsId);
     if (!settings) return;
-    settings.settings.filter = [...(settings.settings.filter || [].filter(e => e.left !== _filter.left)), _filter];
+    settings.settings.filter = [...(settings.settings.filter || []).filter(e => e.left !== _filter.left), _filter];
     this._usNextState({ ...state, apply: state.selected.id === settingsId }, 'filter');
   }
 
@@ -340,8 +336,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   _onColumnMatchOperatorChanged(column: ColumnDef) {
     const newFilter = { ...column.filter, center: column.filter['anyTemp'].value };
-    const isINOperator = ['in', 'not in'].includes(newFilter.center);
-    if (['in', 'not in'].includes(newFilter.center)) newFilter.right = newFilter.right ? [newFilter.right] : [];
+    if (['in', 'not in'].includes(newFilter.center) && !['in', 'not in'].includes(column.filter.center))
+      newFilter.right = newFilter.right ? [newFilter.right] : [];
     if (['in', 'not in'].includes(column.filter.center) && !['in', 'not in'].includes(newFilter.center))
       newFilter.right = Array.isArray(newFilter.right) ? newFilter.right[0] : newFilter.right;
     if (column.filter.center === 'beetwen' && newFilter.center !== 'beetwen')
@@ -359,12 +355,39 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this._pageSize$.next(this.getPageSize());
   }
 
-  update(column: ColumnDef, right: any, center: matchOperator = 'like', startEnd = 'start' || 'end') {
+  async update(column: ColumnDef, right: any, center: matchOperator = 'like', startEnd = 'start' || 'end', isActive?: boolean) {
 
     if (!column) return;
 
+    if (center === '=' &&
+      column.filter.left === 'Operation' &&
+      (Type.isOperation(this.type) || this.type === 'Document.Operation')) {
+      let type = 'Document.Operation';
+      if (right && right.id) type = await this.ds.api.getIndexedOperationType(right.id);
+      if (this.type !== type) {
+        this.type = type;
+        this.dataSource.type = this.type;
+        this.data = undefined;
+        await this.ngOnInit();
+        return;
+      }
+    }
+
+    if (column.type === 'enum') {
+      if (center === '=') {
+        center = 'in';
+        right = [{ label: right, value: right }];
+      } else if (center === 'is null') {
+        right = [{ label: '', value: '' }];
+      }
+    }
+
     const oldF = column.filter;
-    const newF = { ...column.filter, center, right, anyTemp: { label: center, value: center } };
+    const newF = {
+      ...column.filter, center, right,
+      anyTemp: { label: center, value: center },
+      isActive: isActive === undefined ? oldF.isActive : isActive
+    };
 
     if (column.type === 'number') {
       if (center === 'beetwen') {
@@ -383,15 +406,16 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
         newF.right = null;
       newF.isActive = !!newF.right || newF.right === 0;
     } else if (column.type === 'boolean') {
-      newF.isActive = newF.right !== null;
+      newF.isActive = isActive === undefined ? newF.right !== null : isActive;
     } else if (column.type.includes('.') && !['in', 'not in'].includes(center)) {
       if (['is not null', 'is null'].includes(center))
         newF.right = null;
       else
-        newF.isActive = !!newF.right;
+        newF.isActive = newF.right && newF.right.id;
     } else if (['in', 'not in'].includes(center)) {
       if (Array.isArray(newF.right) &&
         Array.isArray(oldF.right) &&
+        column.type !== 'enum' &&
         oldF.right.map(e => e.id).join() === newF.right.map(e => e.id).join()) return; // same array
       newF.isActive = Array.isArray(newF.right) && newF.right.length > 0;
     } else if (['date', 'datetime'].includes(column.type) && newF.right && center === 'beetwen') {
@@ -472,7 +496,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       filter: [...(this.activeFilters || []).map(e => ({
         left: e.left,
         center: e.center,
-        right: ['in', 'not in'].includes(e.center) ? e.right.map(el => `'${el.id}'`).join(',') : e.right
+        right: ['in', 'not in'].includes(e.center) ?
+          e.right.map(el => !!el.label ? `N'${el.label}'` : `'${el.id}'`).join(',') : e.right
       }))],
       order: (multiSortMeta || []).map(el => <FormListOrder>({ field: el.field, order: el.order === -1 ? 'desc' : 'asc' }))
     };
@@ -625,10 +650,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.showDeleted = showDeleted;
     this.addMenuItems.find(e => e.id === 'ShowDeleted').label = `${this.showDeleted ? 'Hide' : 'Show'} deleted`;
     this.setColumnFilter({ left: 'deleted', isActive: this.showDeleted, center: '=', right: false });
-    if (update) {
-      this.prepareDataSource(this.multiSortMeta);
-      this._pageSize$.next(this.getPageSize());
-    }
+    if (update) this.update(this.getColumn('deleted'), false, '=', 'start', !this.showDeleted);
   }
 
   setPresentationMode(mode: string = 'List' || 'Tree' || '') {

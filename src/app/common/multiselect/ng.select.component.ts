@@ -13,23 +13,31 @@ import { IComplexObject } from '../dynamic-form/dynamic-form-base';
 export class JNgSelectComponent implements OnInit {
 
   @Input() selectedItems: IComplexObject[] = [];
+  @Input() selectedItemsSimple: { label: string, value: string }[] = [];
+  @Input() options: { label: string, value: string }[];
   @Input() type: string;
   @Input() inputStyle: { [x: string]: any };
   @Input() id: string;
+  @Input() multiple = true;
   @Input() maxVisibleItems = 10;
-  @Input() notFoundText = 'No items fnd';
+  @Input() notFoundText = 'No items found';
   @Output() select = new EventEmitter<IComplexObject[]>();
 
   suggests$: Observable<ISuggest[]>;
   filters = new FormListSettings();
 
   constructor(private api: ApiService) { }
-
-  ngOnInit(): void { }
+  ngOnInit(): void {
+  }
 
   emitSelect() {
-    if (Array.isArray(this.selectedItems))
-      this.select.emit(this.selectedItems.map(e => ({ id: e.id, code: e.code, type: e.type, value: e.value })));
+    if (!Array.isArray(this.selectedItems)) return;
+    this.select.emit(this.selectedItems.map(e => ({ id: e.id, code: e.code, type: e.type, value: e.value })));
+  }
+
+  emitSelectSimple() {
+    if (!Array.isArray(this.selectedItemsSimple)) return;
+    this.select.emit([...this.selectedItemsSimple] as any);
   }
 
   onFilterChange(ev) {
@@ -42,7 +50,7 @@ export class JNgSelectComponent implements OnInit {
 
   getSuggests(text: string) {
     if (!text) return;
-    this.suggests$ = this.api.getSuggests(this.type, text, this.filters.filter);
+      this.suggests$ = this.api.getSuggests(this.type, text, this.filters.filter);
   }
 
 }

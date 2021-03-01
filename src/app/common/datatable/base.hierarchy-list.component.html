@@ -95,20 +95,24 @@
                     (ngModelChange)="update(rowData, $event,  rowData.filter.center)">
                 </div>
                 <div *ngSwitchCase="'enum'">
-                  <p-dropdown [options]="rowData.filter.value" [ngModel]="rowData.filter.right"
+                  <!-- <p-dropdown [options]="rowData.filter.value" [ngModel]="rowData.filter.right"
                     (ngModelChange)="update(rowData, $event,  rowData.filter.center)" [showClear]="true"
-                    appendTo="body">
-                  </p-dropdown>
+                    >
+                  </p-dropdown> -->
+                  <j-ng-select ngDefaultControl class="ng-select-container-flexible" [options]="rowData.value"
+                    [type]="rowData.type" [id]="rowData.field" [selectedItemsSimple]="rowData.filter.right"
+                    (select)="update(rowData, $event,  rowData.filter.center)">
+                  </j-ng-select>
                 </div>
                 <div *ngSwitchDefault>
                   <j-ng-select ngDefaultControl class="ng-select-container-flexible"
-                    *ngIf="rowData.filter.center === 'in' || rowData.filter.center === 'not in'"
-                    [type]="rowData.type || 'string'" [id]="rowData.field" [selectedItems]="rowData.filter.right"
+                    *ngIf="['in','not in'].includes(rowData.filter.center)" [type]="rowData.type || 'string'"
+                    [id]="rowData.field" [selectedItems]="rowData.filter.right"
                     (select)="update(rowData, $event,  rowData.filter.center)" maxVisibleItems="20">
                   </j-ng-select>
-                  <j-autocomplete-png *ngIf="rowData.filter.center !== 'in' && rowData.filter.center !== 'not in'"
-                    [checkValue]="false" [type]="rowData.type || 'string'" [ngModel]="rowData.filter.right"
-                    [showOpen]="true" [showFind]="true" [showClear]="true" [id]="rowData.field"
+                  <j-autocomplete-png *ngIf="!['in','not in'].includes(rowData.filter.center)" [checkValue]="false"
+                    [type]="rowData.type || 'string'" [ngModel]="rowData.filter.right" [showOpen]="true"
+                    [showFind]="true" [showClear]="true" [id]="rowData.field"
                     (ngModelChange)="update(rowData, $event,  rowData.filter.center)" [appendTo]="'body'">
                   </j-autocomplete-png>
                 </div>
@@ -191,9 +195,9 @@
           *ngIf="selectedData"></button>
       </div>
       <div class="ui-toolbar-group-right">
-        <!-- <p-slideMenu #addMenu [model]="addMenuItems" [popup]="true" effectDuration="300" easing="ease-in"
-          [viewportHeight]="155"></p-slideMenu> -->
-        <!-- <button #addMenuBtn type="button" pButton icon="pi pi-list" (click)="addMenu.toggle($event)"></button> -->
+        <p-slideMenu #addMenu [model]="addMenuItems" [popup]="true" effectDuration="300" easing="ease-in"
+          [viewportHeight]="155"></p-slideMenu>
+        <button #addMenuBtn type="button" pButton icon="pi pi-list" (click)="addMenu.toggle($event)"></button>
         <p-button type="text" (click)="sidebarDisplay = !sidebarDisplay" icon="fa fa-cog"></p-button>
       </div>
     </p-toolbar>
@@ -272,9 +276,14 @@
                 <input [ngModel]="column.filter.right" pInputText (ngModelChange)="update(column, $event, 'like')">
               </div>
               <div *ngSwitchCase="'enum'">
-                <p-dropdown [options]="column.value" [ngModel]="column.filter.right"
+                <!-- <p-dropdown [options]="column.value" [ngModel]="column.filter.right"
                   (ngModelChange)="update(column, $event, column.filter.center ||  '=')" [showClear]="true"
                   appendTo="body"></p-dropdown>
+               -->
+                <j-ng-select ngDefaultControl class="ng-select-container-mini" [type]="column.type" [id]="column.field"
+                  [selectedItemsSimple]="column.filter.right" maxVisibleItems="0" [options]="column.value"
+                  (select)="update(column, $event,  column.filter.center)">
+                </j-ng-select>
               </div>
               <div *ngSwitchDefault>
                 <j-ng-select ngDefaultControl class="ng-select-container-mini"
@@ -423,9 +432,13 @@
                   (ngModelChange)="update(column, $event, column.filter.center || 'like')">
               </div>
               <div *ngSwitchCase="'enum'">
-                <p-dropdown [options]="column.value" [ngModel]="column.filter.right"
+                <!-- <p-dropdown [options]="column.value" [ngModel]="column.filter.right"
                   (ngModelChange)="update(column, $event, column.filter.center || '=')" [showClear]="true"
-                  appendTo="body"></p-dropdown>
+                  appendTo="body"></p-dropdown> -->
+                <j-ng-select ngDefaultControl class="ng-select-container-mini" [type]="column.type" [id]="column.field"
+                  [options]="column.value" [selectedItemsSimple]="column.filter.right" maxVisibleItems="0"
+                  (select)="update(column, $event,  column.filter.center)">
+                </j-ng-select>
               </div>
               <div *ngSwitchDefault>
                 <j-ng-select ngDefaultControl class="ng-select-container-mini"
