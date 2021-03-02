@@ -20,7 +20,6 @@ export class JNgSelectComponent implements OnInit {
   @Input() id: string;
   @Input() multiple = true;
   @Input() maxVisibleItems = 10;
-  @Input() notFoundText = 'No items found';
   @Output() select = new EventEmitter<IComplexObject[]>();
 
   suggests$: Observable<ISuggest[]>;

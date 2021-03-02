@@ -1,6 +1,6 @@
-<ng-select *ngIf="!options" class="custom" [items]="suggests$ | async" [multiple]="multiple" autofocus bindLabel="value"
+<ng-select *ngIf="!options" class="custom" [items]="suggests$ | async" [multiple]="multiple" bindLabel="value"
   [closeOnSelect]="false" [(ngModel)]="selectedItems" (search)="getSuggests($event.term)" appendTo="body"
-  [notFoundText]="notFoundText" (blur)="emitSelect()">
+  (blur)="emitSelect()">
 
   <ng-template ng-multi-label-tmp let-items="items" let-clear="clear">
     <div class="ng-value" *ngFor="let item of items | slice:0:maxVisibleItems">
@@ -28,8 +28,8 @@
   </ng-template>
 </ng-select>
 
-<ng-select *ngIf="options" class="custom" [items]="options" [multiple]="multiple" autofocus bindLabel="label"
-  [closeOnSelect]="false" [(ngModel)]="selectedItemsSimple" appendTo="body" [notFoundText]="notFoundText"
+<ng-select *ngIf="options" class="custom" [items]="options" [multiple]="multiple" bindLabel="label"
+  [closeOnSelect]="false" [(ngModel)]="selectedItemsSimple" appendTo="body"
   (blur)="emitSelectSimple()">
 
   <ng-template ng-multi-label-tmp let-items="items" let-clear="clear">

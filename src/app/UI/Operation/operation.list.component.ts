@@ -12,20 +12,20 @@ import { filter, take } from 'rxjs/operators';
   <div fxLayout="column" style="padding: 6px" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" cdkFocusInitial>
     <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="35px" fxLayoutGap.xs="6px" style="margin-top: 12px; margin-bottom: 6px">
       <div fxFlex>
-        <j-autocomplete-png [ngModel]="getSuperColumn('company')?.right" [inputStyle]="{'background-color': 'lightgoldenrodyellow'}"
-          (ngModelChange)="super.update(getSuperColumn('company'), $event, '=')"
+        <j-autocomplete-png [ngModel]="getSuperColumn('company')?.filter.right" [inputStyle]="{'background-color': 'lightgoldenrodyellow'}"
+          (ngModelChange)="super.update(getSuperColumn('company'), $event, '=')" (clear)="super.update(getSuperColumn('company'), $event,  '=')"
           id="company" placeholder="Select company" type="Catalog.Company">
         </j-autocomplete-png>
       </div>
       <div fxFlex *ngIf="!super.group">
         <j-autocomplete-png [ngModel]="getSuperColumn('Group')?.filter.right" [inputStyle]="{'background-color': 'lightgoldenrodyellow'}"
-          (ngModelChange)="super.update(getSuperColumn('Group'), $event, '=')"
+          (ngModelChange)="super.update(getSuperColumn('Group'), $event, '=')" (clear)="super.update(getSuperColumn('Group'), $event,  '=')"
           id="Group" placeholder="Select group of operation" type="Catalog.Operation.Group">
         </j-autocomplete-png>
       </div>
       <div fxFlex>
         <j-autocomplete-png [ngModel]="getSuperColumn('user')?.filter.right" [inputStyle]="{'background-color': 'lightgoldenrodyellow'}"
-          (ngModelChange)="super.update(getSuperColumn('user'), $event, '=')"
+          (ngModelChange)="super.update(getSuperColumn('user'), $event, '=')" (clear)="super.update(getSuperColumn('user'), $event,  '=')"
           id="user" placeholder="Select user" type="Catalog.User">
         </j-autocomplete-png>
       </div>

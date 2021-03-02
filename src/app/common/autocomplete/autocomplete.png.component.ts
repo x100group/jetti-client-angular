@@ -48,6 +48,7 @@ export class AutocompleteComponent implements ControlValueAccessor, Validator, O
   @Input() inputStyle: { [x: string]: any };
   @Input() checkValue = true;
   @Input() openButton = true;
+  @Output() clear = new EventEmitter();
   @Output() change = new EventEmitter();
   @Output() focus = new EventEmitter();
   @ViewChild('ac', { static: false }) input: AutoComplete;
@@ -144,7 +145,7 @@ export class AutocompleteComponent implements ControlValueAccessor, Validator, O
     this.Suggests$ = this.api.getSuggests(this.value.type || this.type, text, this.filters.filter);
   }
 
-  handleReset = (event: Event) => this.value = this.EMPTY;
+  handleReset = (event: Event) => { this.value = this.EMPTY; this.clear.emit(this.value); };
   handleOpen = (event: Event) => this.router.navigate([this.value.type || this.type, this.value.id]);
   handleSearch = async (event: Event) => {
     // this.useHierarchyList = !this.isTypeValue && this.hierarchy === 'folders';
