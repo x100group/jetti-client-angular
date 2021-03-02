@@ -251,7 +251,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.dataSource.pageSize = pageSize;
     this.pageSize$ = of(pageSize);
     if (this.id) this.goto(this.id);
-    else this.first();
+    else this.last();
   }
 
   private routeSubscruptionHandler() {
@@ -305,7 +305,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       if (this.isCatalog)
         this.multiSortMeta.push({ field: 'description', order: 1 });
       if (this.isDoc)
-        this.multiSortMeta.push({ field: 'date', order: -1 });
+        this.multiSortMeta.push({ field: 'date', order: 1 });
       this.settings.order = this.multiSortMeta.map(e => ({ field: e.field, order: e.order === 1 ? 'asc' : 'desc' }));
     }
   }
