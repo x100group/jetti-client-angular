@@ -69,7 +69,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   get isCatalog() { return Type.isCatalog(this.type); }
   get id() { return this.selectedData ? this.selectedData.id : null; }
   set id(id: string) { this.selection = [{ id, type: this.type }]; this.selectedNode = { data: { id: id }, key: id, type: this.type }; }
-  get visibleColumns() { return this.columns.filter(column => column && !column.hidden); }
+  get visibleColumns() { return this.columns.filter(column => !column.hidden); }
   get activeFilters() { return this.columns.filter(column => column.filter && column.filter.isActive).map(col => col.filter); }
   get filteredColumns() { return this.columns.filter(column => column.filter && column.filter.isActive); }
   get allFilters() {
@@ -151,7 +151,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.addMenuItemsFill();
     this.setSortOrder();
     this.prepareDataSource();
-    this.setContextMenu(this.columns);
+    this.setContextMenu();
 
     this._filterSettingsStateSubscription$ = this._filterSettingsState$
       .pipe(filter(e => e.apply)).subscribe(e => this.onFilterSettingsStateChanged(e));
@@ -216,7 +216,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.settings.filter.push({ left: 'deleted', isActive: true, center: '=', right: false });
     this.columns = buildColumnDef(this.data.schema, this.settings);
     this.hierarchy = this.data.metadata.hierarchy === 'folders';
-    this.treeNodesVisible = this.hierarchy && !this.settings.filter.length;
+    this.treeNodesVisible = this.hierarchy && !this._filtersWithoutDeleted(this.settings.filter).length;
     if (this.hierarchy) {
       const descriptionColumn = this.columns.find(c => c.field === 'description');
       if (descriptionColumn)
@@ -502,9 +502,13 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       order: (multiSortMeta || []).map(el => <FormListOrder>({ field: el.field, order: el.order === -1 ? 'desc' : 'asc' }))
     };
     const treeNodesVisibleBefore = this.treeNodesVisible;
-    this.treeNodesVisible = this._presentation !== 'List' && this.hierarchy && !this.activeFilters.length;
+    this.treeNodesVisible = this._presentation !== 'List' && this.hierarchy && !this._filtersWithoutDeleted(this.activeFilters).length;
     this.dataSource.listOptions.withHierarchy = this.treeNodesVisible;
     if (treeNodesVisibleBefore !== this.treeNodesVisible) this.onTreeNodesVisibleChange();
+  }
+
+  _filtersWithoutDeleted(filters) {
+    return filters.filter(e => e.left !== 'deleted');
   }
 
   getColumnFilter(field: string) {
@@ -525,7 +529,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return res;
   }
 
-  private setContextMenu(columns: ColumnDef[]) {
+  private setContextMenu() {
 
     const qFilterCommand = {
       label: 'Quick filter', icon: 'pi pi-search',
@@ -634,6 +638,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     };
 
     this.addMenuItems = [
+      // { label: 'Export to CSV', command: () => { this.tbl.exportCSV(); } },
+      // { label: 'Reset', command: () => { this._resetTables(); } },
       { label: 'Clear filters', command: () => { this.clearAllFilters(); } },
       { separator: true },
       { label: 'Show deleted', id: 'ShowDeleted', command: () => { this.showDeletedSet(!this.showDeleted, true); } },
@@ -748,14 +754,14 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   onColReorder(event) {
     if (this.columnsSettingsState.isReadonly) this.copySettings('columns');
-    this.settings.columns.order = event.columns.map(e => e.field);
-    this.usApplyColumnsProps();
+    this.settings.columns.order = event.map(e => e.field);
+    // this.usApplyColumnsProps();
     this._columnsSettingsState$.next({ ...this._columnsSettingsState$.value, isModify: true, apply: false });
   }
 
   private onFilterSettingsStateChanged(state: IUserSettingsState) {
     if (!state.settings || !state.apply) return;
-    this.settings = { ...this.settings, filter: state.selected.settings.filter };
+    this.settings = { ...this.settings, filter: [...state.selected.settings.filter] };
     this._resetColumnsFilters();
     this.prepareDataSource(this.multiSortMeta);
     this._isInitComplete$.next(true);
@@ -765,7 +771,15 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   private onColumnsSettingsStateChanged(state: IUserSettingsState) {
     if (!state.settings || !state.apply) return;
-    this.settings = { ...this.settings, columns: state.selected.settings.columns, order: state.selected.settings.order };
+    const stateSet = state.selected.settings.columns;
+    this.settings = {
+      ...this.settings, columns: {
+        color: { ...stateSet.color || {} },
+        width: { ...stateSet.width || {} },
+        visibility: { ...stateSet.visibility || {} },
+        order: [...stateSet.order || []]
+      }, order: [...state.selected.settings.order]
+    };
     this.setSortOrder();
     this.usApplyColumnsProps();
     this.prepareDataSource(this.multiSortMeta);
