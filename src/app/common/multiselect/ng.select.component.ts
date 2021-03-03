@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../services/api.service';
-import { ISuggest, FormListSettings } from 'jetti-middle/dist';
+import { ISuggest, FormListSettings, StorageType, FormListFilter } from 'jetti-middle/dist';
 import { IComplexObject } from '../dynamic-form/dynamic-form-base';
 
 @Component({
@@ -16,6 +16,7 @@ export class JNgSelectComponent implements OnInit {
   @Input() selectedItemsSimple: { label: string, value: string }[] = [];
   @Input() options: { label: string, value: string }[];
   @Input() type: string;
+  @Input() storageType: StorageType;
   @Input() inputStyle: { [x: string]: any };
   @Input() id: string;
   @Input() multiple = true;
@@ -23,10 +24,16 @@ export class JNgSelectComponent implements OnInit {
   @Output() select = new EventEmitter<IComplexObject[]>();
 
   suggests$: Observable<ISuggest[]>;
-  filters = new FormListSettings();
+  filters: FormListFilter[] = [];
 
   constructor(private api: ApiService) { }
+
   ngOnInit(): void {
+
+    if (this.storageType === 'folders') { this.filters.push({ left: 'isfolder', center: '=', right: true }); }
+    if (this.storageType === 'elements') { this.filters.push({ left: 'isfolder', center: '=', right: false }); }
+    if (this.storageType === 'all') { this.filters.push({ left: 'isfolder', center: '=', right: undefined }); }
+
   }
 
   emitSelect() {
@@ -49,7 +56,7 @@ export class JNgSelectComponent implements OnInit {
 
   getSuggests(text: string) {
     if (!text) return;
-      this.suggests$ = this.api.getSuggests(this.type, text, this.filters.filter);
+    this.suggests$ = this.api.getSuggests(this.type, text, this.filters);
   }
 
 }

@@ -156,7 +156,7 @@
             <div *ngFor="let r of relations$ | async">
               <p-panel [toggleable]="true" [collapsed]="true" #relation [header]="r.name" toggler="header">
                 <j-hierarchy-list *ngIf="!relation.collapsed && !r.type.startsWith('Register.')" [type]="r.type"
-                  [pageSize]=10
+                  [pageSize]=10 [isRelationList]="true"
                   [settings]="{order: [], filter: [
                   {left: r.field, center: '=', right: {id: viewModel.id, type: viewModel.type, value: viewModel.description}}]}">
                 </j-hierarchy-list>

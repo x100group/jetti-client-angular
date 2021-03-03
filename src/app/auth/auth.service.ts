@@ -63,12 +63,12 @@ export class AuthService {
 
   public getUserView(envKey: string): string {
     if (!this.token || !envKey) return '';
-    return this.tokenPayload['view'];
+    return this.tokenPayload['env']['view'];
   }
 
   public getUserEnviromentSettingsValueByKey(envKey: string): string {
     if (!this.token || !envKey) return '';
-    return this.tokenPayload['settings'][envKey];
+    return this.tokenPayload['env']['settings'][envKey];
   }
 
   public LOGIC_USECASHREQUESTAPPROVING(): boolean {

@@ -1,5 +1,5 @@
 <div>
-  <p-sidebar [(visible)]="sidebarDisplay" [style]="{width:'45em'}" position="right">
+  <p-sidebar *ngIf="!isRelationList" [(visible)]="sidebarDisplay" [style]="{width:'45em'}" position="right">
     <p-tabView>
       <p-tabPanel [header]="'Filters'" leftIcon="fas fa-filter">
         <div>
@@ -107,12 +107,13 @@
                 <div *ngSwitchDefault>
                   <j-ng-select ngDefaultControl class="ng-select-container-flexible"
                     *ngIf="['in','not in'].includes(rowData.filter.center)" [type]="rowData.type || 'string'"
-                    [id]="rowData.field" [selectedItems]="rowData.filter.right"
-                    (select)="update(rowData, $event,  rowData.filter.center)" maxVisibleItems="20">
+                    [storageType]="isDoc ? 'elements' : 'all'" [id]="rowData.field"
+                    [selectedItems]="rowData.filter.right" (select)="update(rowData, $event,  rowData.filter.center)"
+                    maxVisibleItems="20">
                   </j-ng-select>
                   <j-autocomplete-png *ngIf="!['in','not in'].includes(rowData.filter.center)" [checkValue]="false"
-                    [type]="rowData.type || 'string'" [ngModel]="rowData.filter.right" [showOpen]="true"
-                    [showFind]="true" [showClear]="true" [id]="rowData.field"
+                    [type]="rowData.type || 'string'" [ngModel]="rowData.filter.right" [showOpen]="false"
+                    [showFind]="true" [showClear]="true" [id]="rowData.field" [storageType]="isDoc ? 'elements' : 'all'"
                     (clear)="update(rowData, $event,  rowData.filter.center)"
                     (ngModelChange)="update(rowData, $event,  rowData.filter.center)" [appendTo]="'body'">
                   </j-autocomplete-png>
@@ -196,13 +197,19 @@
           pTooltip="Delete" tooltipPosition="top" showDelay="2000" [disabled]="(lds.busy$ | async)"
           *ngIf="selectedData"></button>
       </div>
-      <div class="ui-toolbar-group-right">
+      <div *ngIf="!this.isRelationList" class="ui-toolbar-group-right">
+        <button id="showDeleted" [icon]="this.isDeletedHidden ? 'fas fa-eye-slash' : 'fas fa-eye'" type="text" pButton
+          type="button" (click)="this.isDeletedHidden = !this.isDeletedHidden"
+          [ngClass]="this.isDeletedHidden ? 'ui-button-success' : 'ui-button-danger'"
+          [pTooltip]="this.isDeletedHidden ? 'Show deleted' : 'Hide deleted'" tooltipPosition="top"
+          showDelay="2000"></button>
         <span *ngIf="!isDoc">
           <p-slideMenu #addMenu [model]="addMenuItems" [popup]="true" effectDuration="300" easing="ease-in"
             [viewportHeight]="125"></p-slideMenu>
           <button #addMenuBtn type="button" pButton icon="pi pi-list" (click)="addMenu.toggle($event)"></button>
         </span>
-        <p-button type="text" (click)="sidebarDisplay = !sidebarDisplay" icon="fa fa-cog"></p-button>
+        <p-button type="text" (click)="sidebarDisplay = !sidebarDisplay" icon="fa fa-cog">
+        </p-button>
       </div>
     </p-toolbar>
 
@@ -213,27 +220,28 @@
         columnResizeMode="expand" [scrollable]="true" sortMode="multiple" [scrollHeight]="(pageSize$ | async)*29 + 'px'"
         class="noselect" [contextMenu]="cm" [multiSortMeta]="multiSortMeta" (onLazyLoad)="onLazyLoad($event)"
         [lazy]="true" [(contextMenuSelection)]="selectedNode" (onContextMenuSelect)="onContextMenuSelect($event)"
-        (onColResize)="onColResize($event)" (onColReorder)="onColReorder($event)">
+        (onColResize)="onColResize($event)" (onColReorder)="onColReorder($event.columns)">
 
-        <ng-template pTemplate="colgroup" let-columns="visibleColumns">
+        <ng-template pTemplate="colgroup" let-column>
           <colgroup>
             <col>
-            <col *ngFor="let column of visibleColumns">
+            <col *ngFor="let column of treeTable.columns">
           </colgroup>
         </ng-template>
 
         <ng-template #ttt pTemplate="header" let-columns>
           <tr>
             <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th>
-            <th [ttSortableColumn]="column.field" ttResizableColumn *ngFor="let column of columns"
-              [ngStyle]="column.style">
+            <th [ttSortableColumn]="column.field" ttResizableColumn ttReorderableColumn
+              *ngFor="let column of treeTable.columns" [ngStyle]="column.style">
               {{column.label}}
               <p-treeTableSortIcon [field]="column.field"></p-treeTableSortIcon>
             </th>
+            <th></th>
           </tr>
           <tr>
             <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th>
-            <th *ngFor="let column of visibleColumns" [ngStyle]="column.style" [ngSwitch]="column.type"
+            <th *ngFor="let column of treeTable.columns" [ngStyle]="column.style" [ngSwitch]="column.type"
               class="ui-fluid ui-column-filter">
               <div *ngSwitchCase="'boolean'">
                 <p-triStateCheckbox [ngModel]="column.filter.right || false"
@@ -292,18 +300,20 @@
               <div *ngSwitchDefault>
                 <j-ng-select ngDefaultControl class="ng-select-container-mini"
                   *ngIf="column.filter.center === 'in' || column.filter.center === 'not in'"
-                  [type]="column.type || 'string'" [id]="column.field" [selectedItems]="column.filter.right"
-                  maxVisibleItems="0" (select)="update(column, $event,  column.filter.center)">
+                  [storageType]="isDoc ? 'elements' : 'all'" [type]="column.type || 'string'" [id]="column.field"
+                  [selectedItems]="column.filter.right" maxVisibleItems="0"
+                  (select)="update(column, $event,  column.filter.center)">
                 </j-ng-select>
                 <j-autocomplete-png *ngIf="column.filter.center !== 'in' && column.filter.center !== 'not in'"
                   [checkValue]="false" [type]="column.filter.right?.type || column.type || 'string'"
-                  [ngModel]="column.filter.right" [showOpen]="true" [showFind]="true" [showClear]="true"
-                  (clear)="update(column, $event,  column.filter.center)"
+                  [ngModel]="column.filter.right" [showOpen]="false" [showFind]="true" [showClear]="true"
+                  [storageType]="isDoc ? 'elements' : 'all'" (clear)="update(column, $event,  column.filter.center)"
                   (ngModelChange)="update(column, $event,  column.filter.center || '=')" [id]="column.field"
                   [appendTo]="'body'">
                 </j-autocomplete-png>
               </div>
             </th>
+            <th></th>
           </tr>
 
         </ng-template>
@@ -354,8 +364,8 @@
         [filterDelay]="1000" (onContextMenuSelect)="onContextMenuSelect($event)" [contextMenu]="cm"
         [(contextMenuSelection)]="contextMenuSelection" [metaKeySelection]="true" [columns]="visibleColumns"
         class="noselect" [(selection)]="selection" (onLazyLoad)="onLazyLoad($event)" [(multiSortMeta)]="multiSortMeta"
-        [lazyLoadOnInit]="false" [resizableColumns]="true" columnResizeMode="expand" (onColResize)="onColResize($event)"
-        (onColReorder)="onColReorder($event)">
+        [lazyLoadOnInit]="true" [resizableColumns]="true" columnResizeMode="expand" (onColResize)="onColResize($event)"
+        (onColReorder)="onColReorder($event.columns)">
         <ng-template pTemplate="colgroup" let-columns>
           <colgroup>
             <col>
@@ -449,12 +459,13 @@
                 <j-ng-select class="ng-select-container-mini"
                   *ngIf="column.filter.center === 'in' || column.filter.center === 'not in'"
                   [type]="column.type || 'string'" [id]="column.field" [selectedItems]="column.filter.right"
-                  (select)="update(column, $event,  column.filter.center)" maxVisibleItems="0">
+                  [storageType]="isDoc ? 'elements' : 'all'" (select)="update(column, $event,  column.filter.center)"
+                  maxVisibleItems="0">
                 </j-ng-select>
                 <j-autocomplete-png *ngIf="column.filter.center !== 'in' && column.filter.center !== 'not in'"
                   [checkValue]="false" [type]="column.filter.right?.type || column.type || 'string'"
-                  [ngModel]="column.filter.right" [showOpen]="true" [showFind]="true" [showClear]="true"
-                  (clear)="update(column, $event,  column.filter.center)"
+                  [ngModel]="column.filter.right" [showOpen]="false" [showFind]="true" [showClear]="true"
+                  [storageType]="isDoc ? 'elements' : 'all'" (clear)="update(column, $event,  column.filter.center)"
                   (ngModelChange)="update(column, $event,  column.filter.center || '=')" [id]="column.field"
                   [appendTo]="'body'">
                 </j-autocomplete-png>

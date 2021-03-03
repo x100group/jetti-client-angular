@@ -30,6 +30,7 @@ import { settingsKind } from 'jetti-middle/dist/common/classes/user-settings';
 })
 export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   @Input() pageSize;
+  @Input() isRelationList = false;
   @Input() type: string;
   @Input() settings: FormListSettings = new FormListSettings();
   @Input() data: IViewModel;
@@ -53,7 +54,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private _columnsSettingsState$: BehaviorSubject<IUserSettingsState> = new BehaviorSubject<IUserSettingsState>({ selected: { description: 'Default' } as any });
   private _columnsSettingsStateSubscription$: Subscription = Subscription.EMPTY;
 
-  private _isInitComplete$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  private _isInitComplete$: BehaviorSubject<boolean> = new BehaviorSubject(this.isRelationList);
 
   isInitComplete$ = this._isInitComplete$.asObservable();
 
@@ -81,6 +82,13 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return this.treeNodesVisible ?
       (this.selectedNode ? this.selectedNode.data : null) :
       (this.selection && this.selection.length ? this.selection[0] : null);
+  }
+
+  get isDeletedHidden() { return !!this.activeFilters.find(e => e.left === 'deleted'); }
+
+  set isDeletedHidden(value: boolean) {
+    this.addMenuItems.find(e => e.id === 'ShowDeleted').label = `${value ? 'Show' : 'Hide'} deleted`;
+    this.update(this.getColumn('deleted'), false, '=', 'start', value);
   }
 
   get dataViewTypeChangeCommands() {
@@ -112,7 +120,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   contexCommands: { list: MenuItem[], tree: MenuItem[] } = { list: [], tree: [] };
   filters: { [s: string]: FormListFilter } = {};
   multiSortMeta: SortMeta[] = [];
-  showDeleted = false;
   dataSource: ApiDataSource;
   private _userEmail = this.auth.userEmail;
   sidebarDisplay = false;
@@ -139,6 +146,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
     if (!this.settings) this.settings = this.data.settings;
     if (!this.data && this.type) {
+      if (this.isRelationList) this._initDataSource();
       const DocMeta = await this.ds.api.getDocMetaByType(this.type);
       this.data = { schema: DocMeta.Props, metadata: DocMeta.Prop as DocumentOptions, columnsDef: [], model: {}, settings: this.settings };
     }
@@ -154,9 +162,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.setContextMenu();
 
     this._filterSettingsStateSubscription$ = this._filterSettingsState$
-      .pipe(filter(e => e.apply)).subscribe(e => this.onFilterSettingsStateChanged(e));
+      .pipe(filter(e => e.apply && !this.isRelationList)).subscribe(e => this.onFilterSettingsStateChanged(e));
     this._columnsSettingsStateSubscription$ = this._columnsSettingsState$
-      .pipe(filter(e => e.apply)).subscribe(e => this.onColumnsSettingsStateChanged(e));
+      .pipe(filter(e => e.apply && !this.isRelationList)).subscribe(e => this.onColumnsSettingsStateChanged(e));
 
     this._docSubscription$ = merge(...[
       this.ds.save$, this.ds.delete$, this.ds.saveClose$, this.ds.goto$, this.ds.post$, this.ds.unpost$]).pipe(
@@ -195,6 +203,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       .subscribe(event => this._update(event));
     this.usLoad();
     this._saveWindowHeigh();
+    if (this.isRelationList) this.last();
   }
 
   private _saveWindowHeigh() {
@@ -213,7 +222,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private _initColumns() {
     if (this.data.metadata['Group'])
       this.settings.filter.push({ left: 'Group', center: '=', right: this.data.metadata['Group'], isActive: true });
-    this.settings.filter.push({ left: 'deleted', isActive: true, center: '=', right: false });
+    if (!this.isRelationList) this.settings.filter.push({ left: 'deleted', isActive: true, center: '=', right: false });
     this.columns = buildColumnDef(this.data.schema, this.settings);
     this.hierarchy = this.data.metadata.hierarchy === 'folders';
     this.treeNodesVisible = this.hierarchy && !this._filtersWithoutDeleted(this.settings.filter).length;
@@ -558,9 +567,11 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   clearAllFilters() {
-    this.activeFilters.forEach(f => f.isActive = false);
-    if (this.showDeleted) this.showDeletedSet(false);
-    this.prepareDataSource(); this.goto(this.id);
+    this.activeFilters
+      .filter(e => !this.isDeletedHidden || e.left !== 'deleted')
+      .forEach(f => f.isActive = false);
+    this.prepareDataSource();
+    this.goto(this.id);
   }
 
   private buildFiltersParamQuery() {
@@ -642,7 +653,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       // { label: 'Reset', command: () => { this._resetTables(); } },
       { label: 'Clear filters', command: () => { this.clearAllFilters(); } },
       { separator: true },
-      { label: 'Show deleted', id: 'ShowDeleted', command: () => { this.showDeletedSet(!this.showDeleted, true); } },
+      { label: 'Show deleted', id: 'ShowDeleted', command: () => { this.isDeletedHidden = !this.isDeletedHidden; } },
 
     ];
     if (this.hierarchy) this.addMenuItems = [viewMenuItems, { separator: true }, ...this.addMenuItems];
@@ -650,13 +661,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   private _resetTables() {
     this.treeNodesVisible ? this.treeTable.reset() : this.tbl.reset();
-  }
-
-  showDeletedSet(showDeleted: boolean, update = false) {
-    this.showDeleted = showDeleted;
-    this.addMenuItems.find(e => e.id === 'ShowDeleted').label = `${this.showDeleted ? 'Hide' : 'Show'} deleted`;
-    this.setColumnFilter({ left: 'deleted', isActive: this.showDeleted, center: '=', right: false });
-    if (update) this.update(this.getColumn('deleted'), false, '=', 'start', !this.showDeleted);
   }
 
   setPresentationMode(mode: string = 'List' || 'Tree' || '') {
@@ -673,11 +677,10 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       case 'Tree':
         this.treeNodesVisible = true;
         this.clearAllFilters();
-        this.showDeletedSet(this.showDeleted);
         break;
       case 'Auto':
         const dsFilter = this.dataSource.formListSettings.filter;
-        this.treeNodesVisible = this.hierarchy && (!!dsFilter.length || (dsFilter.length === 1 && !this.showDeleted));
+        this.treeNodesVisible = this.hierarchy && (!!dsFilter.length || (dsFilter.length === 1 && this.isDeletedHidden));
         break;
       default:
         break;
@@ -690,6 +693,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   onTreeNodesVisibleChange() {
+
     this.dataSource.listOptions.withHierarchy = this.treeNodesVisible;
     if (this.treeNodesVisible && this.selection.length > 0) { this.id = this.selection[0].id; this.initNodes = true; }
     // tslint:disable-next-line: one-line
@@ -752,10 +756,10 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return this.columns.find(e => e.label === label);
   }
 
-  onColReorder(event) {
+  onColReorder(columns) {
     if (this.columnsSettingsState.isReadonly) this.copySettings('columns');
-    this.settings.columns.order = event.map(e => e.field);
-    // this.usApplyColumnsProps();
+    this.settings.columns.order = columns.map(e => e.field);
+    this.usApplyColumnsProps();
     this._columnsSettingsState$.next({ ...this._columnsSettingsState$.value, isModify: true, apply: false });
   }
 
@@ -939,24 +943,31 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private usLoad() {
-    this.uss.loadSettings(this.usGetSettingsType(), this._userEmail, '', this.usGetDefaultSettings()).then(
-      savedSettings => {
-        const stateFromSettings = (settings: IUserSettings[]) => {
-          this._usNextState({
-            settings: settings,
-            selected: settings[0],
-            isModify: false,
-            isNew: false,
-            isReadonly: !settings[0].id,
-            apply: true
-          }, settings[0].kind);
-        };
-        const fSet = savedSettings.filter(e => e.kind === 'filter');
-        fSet.filter(e => !!e.id).forEach(e => e.settings.filter.forEach(f => f.isActive = true));
-        stateFromSettings(savedSettings.filter(e => e.kind === 'columns'));
-        stateFromSettings(fSet);
-      }
-    );
+    if (this.isRelationList) return;
+    const defaults = this.usGetDefaultSettings();
+    const stateFromSettings = (settings: IUserSettings[]) => {
+      this._usNextState({
+        settings: settings,
+        selected: settings[0],
+        isModify: false,
+        isNew: false,
+        isReadonly: !settings[0].id,
+        apply: true
+      }, settings[0].kind);
+    };
+    if (this.isRelationList) {
+      stateFromSettings(defaults.filter(e => e.kind === 'columns'));
+      stateFromSettings(defaults.filter(e => e.kind === 'filter'));
+    } else {
+      this.uss.loadSettings(this.usGetSettingsType(), this._userEmail, '', defaults).then(
+        savedSettings => {
+          const fSet = savedSettings.filter(e => e.kind === 'filter');
+          fSet.filter(e => !!e.id).forEach(e => e.settings.filter.forEach(f => f.isActive = true));
+          stateFromSettings(savedSettings.filter(e => e.kind === 'columns'));
+          stateFromSettings(fSet);
+        }
+      );
+    }
   }
 
   private usGetDefaultSettings(): IUserSettings[] {

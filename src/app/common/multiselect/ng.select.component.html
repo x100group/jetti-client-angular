@@ -1,6 +1,6 @@
 <ng-select *ngIf="!options" class="custom" [items]="suggests$ | async" [multiple]="multiple" bindLabel="value"
   [closeOnSelect]="false" [(ngModel)]="selectedItems" (search)="getSuggests($event.term)" appendTo="body"
-  (blur)="emitSelect()">
+  (blur)="emitSelect()" (clear)="emitSelect()">
 
   <ng-template ng-multi-label-tmp let-items="items" let-clear="clear">
     <div class="ng-value" *ngFor="let item of items | slice:0:maxVisibleItems">
@@ -18,10 +18,10 @@
   <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index" class="some">
     <div fxLayout="row" style="align-content: center; align-items: center;">
       <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" />
-      <i *ngIf="!item.isfolder && !item.deleted" class="fa fa-check-square" style="color: #5cb85c"></i>
-      <i *ngIf="!item.isfolder && item.deleted" class="fa fa-minus-square" style="color: #d9534f"></i>
+      <i *ngIf="!item.isfolder && !item.deleted" class="pi pi-minus" style="color: #2434c7"></i>
+      <i *ngIf="!item.isfolder && item.deleted" class="pi pi-minus" style="color: #d9534f"></i>
       <i *ngIf="item.isfolder && item.deleted" class="fa fa-folder" style="color: #d9534f"></i>
-      <i *ngIf="item.isfolder && !item.deleted" class="fa fa-folder" style="color: #5cb85c"></i>
+      <i *ngIf="item.isfolder && !item.deleted" class="fa fa-folder" style="color: #d1cf38"></i>
       <div *ngIf="item.deleted"><s style="color: #d9534f">{{item.description}}</s></div>
       <div *ngIf="!item.deleted">{{item.description}}</div>
     </div>
@@ -29,8 +29,8 @@
 </ng-select>
 
 <ng-select *ngIf="options" class="custom" [items]="options" [multiple]="multiple" bindLabel="label"
-  [closeOnSelect]="false" [(ngModel)]="selectedItemsSimple" appendTo="body"
-  (blur)="emitSelectSimple()">
+  [closeOnSelect]="false" [(ngModel)]="selectedItemsSimple" appendTo="body" (blur)="emitSelectSimple()"
+  (clear)="emitSelect()">
 
   <ng-template ng-multi-label-tmp let-items="items" let-clear="clear">
     <div class="ng-value" *ngFor="let item of items | slice:0:maxVisibleItems">
