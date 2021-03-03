@@ -32,12 +32,12 @@
           <ng-template pTemplate="body" let-rowData let-index="rowIndex">
             <tr [id]="rowData.field">
               <td style="width: 20px;"
-                (dblclick)="setColumnFilterIsActive(rowData, rowData.filter ? !rowData.filter.isActive : true)">
+                (onClick)="setColumnFilterIsActive(rowData, rowData.filter ? !rowData.filter.isActive : true)">
                 <i *ngIf="rowData.filter.isActive" style="padding-right: 7px;" class="fa fa-check-square"></i>
                 <i *ngIf="!rowData.filter.isActive" class="far fa-square" style="padding-right: 7px;"></i>
               </td>
               <td style="width: 10em;"
-                (dblclick)="setColumnFilterIsActive(rowData, rowData.filter ? !rowData.filter.isActive : true)">
+                (click)="setColumnFilterIsActive(rowData, rowData.filter ? !rowData.filter.isActive : true)">
                 {{rowData.field}}
               </td>
               <td style="width: 138px; text-align: center;">
@@ -134,8 +134,6 @@
               <button type="button" icon="far fa-save" pButton class="ui-button-secondary"
                 [disabled]="!columnsSettingsState.isModify || columnsSettingsState.isReadonly"
                 (click)="usSaveCurrentSettings('columns')"></button>
-              <!-- <button id="resetColumns" class="ui-button-secondary" pButton type="button" label="Reset"
-                (click)="resetSelectedSettings('columns')"></button> -->
             </div>
             <div class="ui-toolbar-group-right">
               <p-dropdown #ddSettings [ngModel]="columnsSettingsState.selected" [panelStyle]="{'width': 'auto'}"
@@ -151,20 +149,13 @@
           scrollHeight="700px" (onRowReorder)="onColReorder(columns)">
           <ng-template pTemplate="body" let-rowData let-index="rowIndex">
             <tr *ngIf="true || !columnsSettingsState.isReadonly" [id]="rowData.field" [pReorderableRow]="index"
-              (dblclick)="usColumnsInvertHidden(rowData)">
+              (click)="usColumnsInvertHidden(rowData)">
               <td pReorderableRowHandle>
                 <i *ngIf="!rowData.hidden" style="padding-right: 7px;" class="fa fa-check-square"></i>
                 <i *ngIf="rowData.hidden" class="far fa-square" style="padding-right: 7px;"></i>
                 {{rowData.label}}
               </td>
             </tr>
-            <!-- <tr *ngIf="columnsSettingsState.isReadonly" [id]="rowData.field">
-              <td>
-                <i *ngIf="!rowData.hidden" style="padding-right: 7px;" class="fa fa-check-square"></i>
-                <i *ngIf="rowData.hidden" class="far fa-square" style="padding-right: 7px;"></i>
-                {{rowData.label}}
-              </td>
-            </tr> -->
           </ng-template>
         </p-table>
       </p-tabPanel>
@@ -206,9 +197,11 @@
         <span *ngIf="!isDoc">
           <p-slideMenu #addMenu [model]="addMenuItems" [popup]="true" effectDuration="300" easing="ease-in"
             [viewportHeight]="125"></p-slideMenu>
-          <button #addMenuBtn type="button" pButton icon="pi pi-list" (click)="addMenu.toggle($event)"></button>
+          <button #addMenuBtn type="button" pButton icon="pi pi-list" (click)="addMenu.toggle($event)"
+            pTooltip="More..." tooltipPosition="top" showDelay="2000"></button>
         </span>
-        <p-button type="text" (click)="sidebarDisplay = !sidebarDisplay" icon="fa fa-cog">
+        <p-button type="text" (click)="sidebarDisplay = !sidebarDisplay" icon="fa fa-cog" pTooltip="Settings"
+          tooltipPosition="top" showDelay="2000">
         </p-button>
       </div>
     </p-toolbar>
@@ -231,16 +224,15 @@
 
         <ng-template #ttt pTemplate="header" let-columns>
           <tr>
-            <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th>
+
             <th [ttSortableColumn]="column.field" ttResizableColumn ttReorderableColumn
               *ngFor="let column of treeTable.columns" [ngStyle]="column.style">
               {{column.label}}
               <p-treeTableSortIcon [field]="column.field"></p-treeTableSortIcon>
             </th>
-            <th></th>
           </tr>
           <tr>
-            <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th>
+
             <th *ngFor="let column of treeTable.columns" [ngStyle]="column.style" [ngSwitch]="column.type"
               class="ui-fluid ui-column-filter">
               <div *ngSwitchCase="'boolean'">
@@ -288,10 +280,6 @@
                 <input [ngModel]="column.filter.right" pInputText (ngModelChange)="update(column, $event, 'like')">
               </div>
               <div *ngSwitchCase="'enum'">
-                <!-- <p-dropdown [options]="column.value" [ngModel]="column.filter.right"
-                  (ngModelChange)="update(column, $event, column.filter.center ||  '=')" [showClear]="true"
-                  appendTo="body"></p-dropdown>
-               -->
                 <j-ng-select class="ng-select-container-mini" [type]="column.type" [id]="column.field"
                   [selectedItemsSimple]="column.filter.right" maxVisibleItems="0" [options]="column.value"
                   (select)="update(column, $event,  column.filter.center)">
@@ -313,19 +301,18 @@
                 </j-autocomplete-png>
               </div>
             </th>
-            <th></th>
           </tr>
 
         </ng-template>
         <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
           <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode" [ttContextMenuRow]="rowNode"
-            (dblclick)="onNodeDblclick(rowNode)">
-            <td class="ui-resizable-column" [ngStyle]="{'width': '1px', 'text-align': 'center'}"></td>
-            <td *ngFor="let column of columns" [ngStyle]="column.style">
+            (click)="onNodeClick(rowNode)">
+            <!-- <td class="ui-resizable-column" [ngStyle]="{'width': '1px', 'text-align': 'center'}"></td> -->
+            <td class="ui-resizable-column" *ngFor="let column of columns" [ngStyle]="column.style">
               <span [ngSwitch]="column.type" [id]="column.field">
                 <span *ngSwitchCase="'date'" [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy'}}</span>
-                <span *ngSwitchCase="'datetime'" [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy
-                  HH:mm:ss'}}</span>
+                <span *ngSwitchCase="'datetime'" [id]="column.field">
+                  {{rowData[column.field] | date:'dd.MM.yyyy HH:mm:ss'}}</span>
                 <span *ngSwitchCase="'number'" [id]="column.field">{{rowData[column.field] | number:'1.2-4'}}</span>
                 <span *ngSwitchCase="'boolean'" [id]="column.field">
                   <i *ngIf="rowData[column.field]" class="fa fa-check-square" [id]="column.field"></i>
@@ -395,16 +382,6 @@
                   (ngModelChange)="update(column, $event, column.filter.center || '=')">
                 </p-triStateCheckbox>
               </div>
-              <!-- <div *ngIf="column.type !== 'boolean'">
-
-                  <button *ngIf="column.filter.isActive" icon="fa fa-check-square" class="ui-button-secondary" pButton
-                    type="button" (click)="setColumnFilterIsActive(column, !column.filter.isActive)"></button>
-                  <button *ngIf="!column.filter.isActive" icon="far fa-square" class="ui-button-secondary" pButton
-                    type="button" (click)="setColumnFilterIsActive(column, !column.filter.isActive)"></button>
-
-
-                </div> -->
-
               <div *ngSwitchCase="'number'">
                 <div *ngIf="column.filter.center === 'beetwen'"
                   style="display: flex; flex-direction: row; overflow-x: hidden;">
@@ -489,8 +466,8 @@
             <td *ngFor="let column of tbl.columns" [ngStyle]="column.style" class="ui-resizable-column">
               <span [ngSwitch]="column.type" [id]="column.field">
                 <span *ngSwitchCase="'date'" [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy'}}</span>
-                <span *ngSwitchCase="'datetime'" [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy
-                  HH:mm:ss'}}</span>
+                <span *ngSwitchCase="'datetime'" [id]="column.field">
+                  {{rowData[column.field] | date:'dd.MM.yyyy HH:mm:ss'}}</span>
                 <span *ngSwitchCase="'number'" [id]="column.field">{{rowData[column.field] | number:'1.2-4'}}</span>
                 <span *ngSwitchCase="'boolean'" [id]="column.field">
                   <i *ngIf="rowData[column.field]" class="fa fa-check-square" [id]="column.field"></i>
@@ -506,8 +483,6 @@
         </ng-template>
 
       </p-table>
-
-
     </div>
 
     <p-toolbar>

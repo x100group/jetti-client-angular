@@ -31,22 +31,22 @@
 
         <ng-template pTemplate="colgroup" let-columns>
           <colgroup>
-            <col>
+            <!-- <col> -->
             <col *ngFor="let column of columns">
           </colgroup>
         </ng-template>
 
         <ng-template #ttt pTemplate="header" let-columns>
           <tr>
-            <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th>
-            <th [ttSortableColumn]="column.field" ttResizableColumn *ngFor="let column of columns"
+            <!-- <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th> -->
+            <th [ttSortableColumn]="column.field" ttResizableColumn ttReorderableColumn *ngFor="let column of columns"
               [ngStyle]="column.style">
               {{column.label}}
               <p-treeTableSortIcon [field]="column.field"></p-treeTableSortIcon>
             </th>
           </tr>
           <tr>
-            <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th>
+            <!-- <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th> -->
             <th *ngFor="let column of columns" [ngStyle]="column.style" [ngSwitch]="column.type"
               class="ui-fluid ui-column-filter">
               <div *ngSwitchCase="'boolean'">
@@ -91,12 +91,12 @@
         </ng-template>
         <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
           <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode" (dblclick)="onNodeDblclick(rowNode)">
-            <td class="ui-resizable-column" [ngStyle]="{'width': '1px', 'text-align': 'center'}"></td>
-            <td *ngFor="let column of columns" [ngStyle]="column.style">
+            <!-- <td class="ui-resizable-column" [ngStyle]="{'width': '1px', 'text-align': 'center'}"></td> -->
+            <td class="ui-resizable-column" *ngFor="let column of columns" [ngStyle]="column.style">
               <span [ngSwitch]="column.type" [id]="column.field">
                 <span *ngSwitchCase="'date'" [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy'}}</span>
-                <span *ngSwitchCase="'datetime'"
-                  [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy HH:mm:ss'}}</span>
+                <span *ngSwitchCase="'datetime'" [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy
+                  HH:mm:ss'}}</span>
                 <span *ngSwitchCase="'number'" [id]="column.field">{{rowData[column.field] | number:'1.2-4'}}</span>
                 <span *ngSwitchCase="'boolean'" [id]="column.field">
                   <i *ngIf="rowData[column.field]" class="fa fa-check-square" [id]="column.field"></i>
@@ -137,13 +137,13 @@
         [lazyLoadOnInit]="false" [scrollable]="true" [reorderableColumns]="true" [resizableColumns]="true">
         <ng-template pTemplate="colgroup" let-columns>
           <colgroup>
-            <col>
+            <!-- <col> -->
             <col *ngFor="let column of tbl.columns">
           </colgroup>
         </ng-template>
         <ng-template #ttt pTemplate="header" let-columns>
           <tr>
-            <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th>
+            <!-- <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th> -->
             <th pReorderableColumn pResizableColumn [pSortableColumn]="column.field" [pSortableColumn]="column.field"
               *ngFor="let column of tbl.columns" [ngStyle]="column.style">
               {{column.label}}
@@ -151,7 +151,7 @@
             </th>
           </tr>
           <tr>
-            <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th>
+            <!-- <th [ngStyle]="{'width': '1px', 'text-align': 'center'}"></th> -->
             <th *ngFor="let column of tbl.columns" [ngStyle]="column.style" [ngSwitch]="column.type"
               class="ui-fluid ui-column-filter">
               <div *ngSwitchCase="'boolean'">
@@ -197,7 +197,7 @@
 
         <ng-template pTemplate="body" let-rowData>
           <tr [pSelectableRow]="rowData" (dblclick)="select(rowData)" [class]="'scrollTo-' + type">
-            <td class="ui-resizable-column" [ngStyle]="{'width': '1px', 'text-align': 'center'}"></td>
+            <!-- <td class="ui-resizable-column" [ngStyle]="{'width': '1px', 'text-align': 'center'}"></td> -->
             <!-- <td class="ui-resizable-column" [ngStyle]="{'width': '26px', 'text-align': 'center'}">
               <i *ngIf="!rowData.isfolder && rowData['posted'] && !rowData['deleted']" class="fa fa-check-square"
                 style="color: #5cb85c"></i>
@@ -207,11 +207,12 @@
               <i *ngIf="rowData.isfolder && rowData['deleted']" class="fa fa-folder" style="color: #d9534f"></i>
               <i *ngIf="rowData.isfolder && !rowData['deleted']" class="fa fa-folder" style="color: #5cb85c"></i>
             </td> -->
-            <td *ngFor="let column of tbl.columns" [ngStyle]="column.style" [class]="'scrollTo-' + type">
+            <td class="ui-resizable-column" *ngFor="let column of tbl.columns" [ngStyle]="column.style"
+              [class]="'scrollTo-' + type">
               <span [ngSwitch]="column.type" [id]="column.field">
                 <span *ngSwitchCase="'date'" [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy'}}</span>
-                <span *ngSwitchCase="'datetime'"
-                  [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy HH:mm:ss'}}</span>
+                <span *ngSwitchCase="'datetime'" [id]="column.field">{{rowData[column.field] | date:'dd.MM.yyyy
+                  HH:mm:ss'}}</span>
                 <span *ngSwitchCase="'number'" [id]="column.field">{{rowData[column.field] | number:'1.2-4'}}</span>
                 <span *ngSwitchCase="'boolean'" [id]="column.field">
                   <i *ngIf="rowData[column.field]" class="fa fa-check-square" [id]="column.field"></i>

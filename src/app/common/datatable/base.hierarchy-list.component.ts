@@ -351,7 +351,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       newFilter.right = Array.isArray(newFilter.right) ? newFilter.right[0] : newFilter.right;
     if (column.filter.center === 'beetwen' && newFilter.center !== 'beetwen')
       newFilter.right = newFilter.right.start || newFilter.right.start === 0 ? newFilter.right.start : null;
-    newFilter.isActive = false;
+    // newFilter.isActive = false;
     column.filter = newFilter;
     this._filterSettingsState$.next({ ...this._filterSettingsState$.value, isModify: true, apply: false });
   }
@@ -486,7 +486,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     });
   }
 
-  onNodeDblclick(node: { node: TreeNode }) {
+  onNodeClick(node: { node: TreeNode }) {
     const Node = node.node;
     if (Node.leaf) { this.open(Node.key); return; }
     Node.expanded = !Node.expanded;
