@@ -60,8 +60,7 @@
 
         <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="35px" fxLayoutGap.xs="0px">
           <j-control [control]="vk.company" [form]="form"></j-control>
-          <j-control *ngIf="useCashOrBank()"
-            [control]="vk['CashOrBank']" [form]="form">
+          <j-control *ngIf="useCashOrBank()" [control]="vk['CashOrBank']" [form]="form">
           </j-control>
           <j-control [control]="vk.CashFlow" [form]="form"></j-control>
         </div>
@@ -229,7 +228,7 @@
   <div *ngIf="(isFolder$ | async) === false">
     <div *ngFor="let r of relations$ | async">
       <p-panel [toggleable]="true" [collapsed]="true" #relation [header]="r.name" toggler="header">
-        <j-hierarchy-list *ngIf="!relation.collapsed" [type]="r.type" [pageSize]=10
+        <j-hierarchy-list *ngIf="!relation.collapsed" [type]="r.type" [pageSize]=10 [isRelationList]="true"
           [settings]="{order: [], filter: [
           {left: r.field, center: '=', right: {id: viewModel.id, type: viewModel.type, value: viewModel.description}}]}">
         </j-hierarchy-list>

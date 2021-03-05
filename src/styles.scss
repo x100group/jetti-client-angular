@@ -384,12 +384,8 @@ body .ui-table .ui-table-tfoot > tr > td {
   min-width: 251px;
 }
 
-// body > .ng-dropdown-panel {
-//   margin-left: 17px;
-// }
-
 .ng-select-container-flexible .ng-select .ng-select-container {
-  min-height: 25.75px;
+  min-height: 25.44px;
 }
 
 .ng-select-container-mini .ng-select .ng-select-container {
@@ -398,4 +394,24 @@ body .ui-table .ui-table-tfoot > tr > td {
     padding-top: 2px;
     min-height: 14.16px;
   }
+}
+
+ng-dropdown-panel[ng-reflect-position="bottom"] {
+  margin-left: 11px;
+}
+
+.ng-select-container-mini-yellow .ng-select .ng-select-container {
+  min-height: 18.16px;
+  background-color: "lightgoldenrodyellow";
+  .ng-value-container {
+    background-color: "lightgoldenrodyellow";
+    padding-top: 2px;
+    min-height: 14.16px;
+  }
+}
+
+.ng-select.ng-select-multiple .ng-select-container .ng-value-container .ng-value {
+  margin-bottom: 2px;
+  margin-right: 2px;
+  font-size: xx-small;
 }

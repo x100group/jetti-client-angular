@@ -19,6 +19,7 @@ export class JNgSelectComponent implements OnInit {
   @Input() storageType: StorageType;
   @Input() inputStyle: { [x: string]: any };
   @Input() id: string;
+  @Input() placeholder = '';
   @Input() multiple = true;
   @Input() maxVisibleItems = 10;
   @Output() select = new EventEmitter<IComplexObject[]>();

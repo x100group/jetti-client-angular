@@ -19,16 +19,15 @@
                 (click)="showActiveFilters=false" [disabled]="!allFilters.length"></button> -->
             </div>
             <div class="ui-toolbar-group-right">
-              <p-dropdown #ddSettingsFilter [ngModel]="filterSettingsState.selected"
+              <p-dropdown #ddSettingsFilter [ngModel]="filterSettingsState.selected" dataKey="id"
                 class="ui-dropdown-label-container-in-panel" (onChange)="_usOnUserSettingsChange($event, 'filter')"
-                optionLabel="description" [options]="filterSettingsState.settings" filter="true"
-                [editable]="!filterSettingsState.isReadonly">
+                optionLabel="description" [options]="filterSettingsState.settings" filter="true" editable="true">
               </p-dropdown>
             </div>
           </p-toolbar>
         </div>
         <p-table #columnsTbl [value]="visibleColumns" [rows]="visibleColumns" [responsive]="true" [scrollable]="true"
-          scrollHeight="700px">
+          [scrollHeight]="'calc(100vh - 80px)'">
           <ng-template pTemplate="body" let-rowData let-index="rowIndex">
             <tr [id]="rowData.field">
               <td style="width: 20px;"
@@ -105,7 +104,7 @@
                   </j-ng-select>
                 </div>
                 <div *ngSwitchDefault>
-                  <j-ng-select ngDefaultControl class="ng-select-container-flexible"
+                  <j-ng-select class="ng-select-container-flexible"
                     *ngIf="['in','not in'].includes(rowData.filter.center)" [type]="rowData.type || 'string'"
                     [storageType]="isDoc ? 'elements' : 'all'" [id]="rowData.field"
                     [selectedItems]="rowData.filter.right" (select)="update(rowData, $event,  rowData.filter.center)"
@@ -146,7 +145,7 @@
         </div>
 
         <p-table #columnsTbl [value]="columns" [rows]="columns" [responsive]="true" [scrollable]="true"
-          scrollHeight="700px" (onRowReorder)="onColReorder(columns)">
+          [scrollHeight]="'calc(100vh - 80px)'" (onRowReorder)="onColReorder(columns)">
           <ng-template pTemplate="body" let-rowData let-index="rowIndex">
             <tr *ngIf="true || !columnsSettingsState.isReadonly" [id]="rowData.field" [pReorderableRow]="index"
               (click)="usColumnsInvertHidden(rowData)">
@@ -305,8 +304,7 @@
 
         </ng-template>
         <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
-          <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode" [ttContextMenuRow]="rowNode"
-            (click)="onNodeClick(rowNode)">
+          <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode" [ttContextMenuRow]="rowNode" (dblclick)="onNodeClick(rowNode)">
             <!-- <td class="ui-resizable-column" [ngStyle]="{'width': '1px', 'text-align': 'center'}"></td> -->
             <td class="ui-resizable-column" *ngFor="let column of columns" [ngStyle]="column.style">
               <span [ngSwitch]="column.type" [id]="column.field">

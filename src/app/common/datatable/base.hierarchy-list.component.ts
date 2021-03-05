@@ -139,6 +139,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   readonly = this.auth.isRoleAvailableReadonly();
   addMenuItems: MenuItem[];
   showActiveFilters = false;
+  usSettingsEditMode = false;
 
   async ngOnInit() {
 
@@ -319,15 +320,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     }
   }
 
-  private setSettingsFilter(_filter: FormListFilter) {
-    this.settings.filter = [_filter, ...this.settings.filter.filter(e => e.left !== _filter.left)];
-    // let settingsFilter = this.settings.filter.find(e => e.left === field);
-    // if (settingsFilter) {
-    //   settingsFilter = { ...settingsFilter, ..._filter };
-    // } else
-    //   this.settings.filter.push({ ..._filter });
-  }
-
   addFilterToSettings(_filter: FormListFilter, settingsId: string) {
     const state = this._usStateByKind('filter');
     const settings = state.settings.find(e => e.id === settingsId);
@@ -351,7 +343,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       newFilter.right = Array.isArray(newFilter.right) ? newFilter.right[0] : newFilter.right;
     if (column.filter.center === 'beetwen' && newFilter.center !== 'beetwen')
       newFilter.right = newFilter.right.start || newFilter.right.start === 0 ? newFilter.right.start : null;
-    // newFilter.isActive = false;
     column.filter = newFilter;
     this._filterSettingsState$.next({ ...this._filterSettingsState$.value, isModify: true, apply: false });
   }
@@ -359,7 +350,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private _update(_filter: FormListFilter) {
     if (!_filter.left) return;
     this.setColumnFilter(_filter);
-    this.setSettingsFilter(_filter);
+    this.settings.filter = [_filter, ...this.settings.filter.filter(e => e.left !== _filter.left)];
     this.prepareDataSource(this.multiSortMeta);
     this._pageSize$.next(this.getPageSize());
   }
@@ -374,6 +365,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       let type = 'Document.Operation';
       if (right && right.id) type = await this.ds.api.getIndexedOperationType(right.id);
       if (this.type !== type) {
+        this.settings.filter = [
+          ...this.settings.filter.filter(e => e.isActive),
+          { left: 'Operation', center: '=', right: right, isActive: !!right.id }];
         this.type = type;
         this.dataSource.type = this.type;
         this.data = undefined;
@@ -527,15 +521,11 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   setColumnFilter(_filter: FormListFilter) {
     const col = this.getColumn(_filter.left);
     if (!col) return;
-    // this.columns[this.columns.indexOf(col)] = { ...col, filter: _filter };
-    return this.getColumn(_filter.left).filter = { ..._filter };
+    col.filter = { ..._filter };
   }
 
   getColumn(field: string) {
-    if (!field) return null;
-    const res = this.columns.find(e => e.field === field);
-    // if (!res) console.error('Unknow column: ' + field);
-    return res;
+    return this.columns.find(e => e.field === field);
   }
 
   private setContextMenu() {
@@ -589,10 +579,10 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return result;
   }
 
-  add(isFolder = false) {
+  add(isfolder = false) {
     const id = v1().toUpperCase();
     this.router.navigate([this.type, id],
-      { queryParams: { new: id, ...this.buildFiltersParamQuery(), ...this.getCurrentParent(), isfolder: isFolder } });
+      { queryParams: { new: id, ...this.buildFiltersParamQuery(), ...this.getCurrentParent(), isfolder } });
   }
 
   copy() {
@@ -775,15 +765,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   private onColumnsSettingsStateChanged(state: IUserSettingsState) {
     if (!state.settings || !state.apply) return;
-    const stateSet = state.selected.settings.columns;
-    this.settings = {
-      ...this.settings, columns: {
-        color: { ...stateSet.color || {} },
-        width: { ...stateSet.width || {} },
-        visibility: { ...stateSet.visibility || {} },
-        order: [...stateSet.order || []]
-      }, order: [...state.selected.settings.order]
-    };
+    this.settings = { ...this.settings, columns: { ...state.selected.settings.columns } };
     this.setSortOrder();
     this.usApplyColumnsProps();
     this.prepareDataSource(this.multiSortMeta);
@@ -816,22 +798,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this._usNextState({ ...this._columnsSettingsState$.value, isModify: true }, 'columns');
   }
 
-  _usOnUserSettingsChange(event: any, kind: settingsKind) {
-    const state = this._usStateByKind(kind);
-    let newState: IUserSettingsState;
-    if (typeof event.value === 'string') {
-      state.settings.find(e => e.id === state.selected.id).description = event.value;
-      newState = {
-        ...state,
-        selected: { ...state.selected, description: event.value },
-        isModify: true,
-        apply: false,
-        settings: [...state.settings]
-      };
-    } else
-      newState = { ...state, selected: { ...event.value }, apply: true, isReadonly: !event.value.id };
-    this._usNextState(newState, kind);
-  }
+
 
   _usStateByKind(kind: settingsKind) {
     switch (kind) {
@@ -848,6 +815,25 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return (matchOperatorByType[type] || matchOperatorByType['default']).map(e => ({ label: e, value: e }));
   }
 
+  _cloneSettings(us: IUserSettings, partial: Partial<IUserSettings>): IUserSettings {
+
+    const settings: FormListSettings = { filter: [...us.settings.filter], order: [...us.settings.order] };
+
+    if (us.settings.columns)
+      settings.columns = {
+        color: { ...us.settings.columns.color || {} },
+        width: { ...us.settings.columns.width || {} },
+        visibility: { ...us.settings.columns.visibility || {} },
+        order: [...us.settings.columns.order || []]
+      };
+
+    return {
+      ...us,
+      settings,
+      ...partial || {}
+    };
+  }
+
   copySettings(kind: settingsKind) {
     const state = this._usStateByKind(kind);
     if (!state) return;
@@ -855,7 +841,12 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       const name = `${state.selected.description.replace('(copy 1)', '').trim()} (copy ${index})`;
       return state.settings.find(e => e.description.trim() === name) ? getUniqueSettingsName(++index) : name;
     };
-    const newSettings = { ...state.selected, description: getUniqueSettingsName(1), id: v4().toLocaleUpperCase(), timestamp: null };
+
+    const newSettings = this._cloneSettings(
+      state.selected,
+      { description: getUniqueSettingsName(1), id: v4().toLocaleUpperCase(), timestamp: null }
+    );
+
     const newState: IUserSettingsState = {
       ...state,
       apply: false,
@@ -866,6 +857,37 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       selected: newSettings
     };
     this._usNextState(newState, kind);
+  }
+
+  _usOnUserSettingsChange(event: any, kind: settingsKind) {
+    const state = this._usStateByKind(kind);
+    let newState: IUserSettingsState;
+    if (typeof event.value === 'string') {
+      state.settings.find(e => e.id === state.selected.id).description = event.value;
+      newState = {
+        ...state,
+        selected: { ...state.selected, description: event.value },
+        isModify: true,
+        apply: false,
+        settings: [...state.settings]
+      };
+    } else {
+      const current = this.usGetCurrentSettings(kind);
+      state.settings[state.settings.findIndex(e => e.id === current.id)] = current;
+      state.settings = [...state.settings];
+      newState = {
+        ...state,
+        selected: state.settings.find(e => e.id === event.value.id),
+        apply: true,
+        isReadonly: !event.value.id
+      };
+    }
+    this._usNextState(newState, kind);
+  }
+
+  usEditDescription(kind: settingsKind, dropDown: any) {
+    this.usSettingsEditMode = true;
+    dropDown.focus();
   }
 
   deleteSettingsConfirmationHandler(kind: settingsKind, confirmed: boolean) {
@@ -903,6 +925,11 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       });
   }
 
+  usGetCurrentSettings(kind: settingsKind): IUserSettings {
+    const state = this._usStateByKind(kind);
+    return { ...state.selected, settings: this._getCurrentFormListSettings(kind) };
+  }
+
   usSaveCurrentSettings(kind: settingsKind) {
     const state = this._usStateByKind(kind);
     if (!state || (state.isReadonly && (!state.isModify && kind !== 'filter'))) return;
@@ -910,7 +937,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       this.ds.openSnackBar('warning', 'Can\'t save', `The name "${state.selected.description}" is already in use`);
       return;
     }
-    const selected = { ...state.selected, settings: this._getCurrentFormListSettings(kind) };
+
+    const selected = this.usGetCurrentSettings(kind);
 
     if (kind === 'filter')
       selected.settings.filter = selected.settings.filter

@@ -1,6 +1,7 @@
 <ng-select *ngIf="!options" class="custom" [items]="suggests$ | async" [multiple]="multiple" bindLabel="value"
   [closeOnSelect]="false" [(ngModel)]="selectedItems" (search)="getSuggests($event.term)" appendTo="body"
-  (blur)="emitSelect()" (clear)="emitSelect()">
+  [dropdownPosition]="maxVisibleItems > 1 ? 'bottom' : 'auto'" (blur)="emitSelect()" (clear)="emitSelect()"
+  [placeholder]="placeholder">
 
   <ng-template ng-multi-label-tmp let-items="items" let-clear="clear">
     <div class="ng-value" *ngFor="let item of items | slice:0:maxVisibleItems">
