@@ -11,7 +11,7 @@ import { IFormControlPlacing } from 'src/app/common/dynamic-form/dynamic-form-ba
 import { Subscription, BehaviorSubject } from 'rxjs';
 import { FormBase } from 'jetti-middle/dist';
 
-type panelModify = 'Тип объектов' | 'Параметры' | 'Дополнительно' | 'Фильтр' | 'Список объектов' | 'Новые значения реквизитов';
+type panelModify = 'Тип объектов' | 'Параметры' | 'Дополнительно' | 'Фильтр' | 'Список объектов' | 'Новые значения реквизитов' | 'Произвольный запрос';
 type panelLoad = 'Тип объектов' | 'Параметры' | 'Фильтр' | 'Список объектов' | 'Новые значения реквизитов';
 
 type stepModify = 'start' | 'setProps' | 'setValues' | 'final';
@@ -104,7 +104,7 @@ export class ObjectsGroupModifyComponent extends _baseDocFormComponent implement
         this.panelsBySteps = [
           { step: 'start', panels: ['Тип объектов'], activePanel: 'Тип объектов' },
           { step: 'setProps', panels: ['Параметры'], activePanel: 'Параметры' },
-          { step: 'setValues', panels: ['Параметры', 'Фильтр', 'Новые значения реквизитов', 'Тип объектов', 'Дополнительно'], activePanel: 'Фильтр' },
+          { step: 'setValues', panels: ['Параметры', 'Фильтр', 'Новые значения реквизитов', 'Тип объектов', 'Дополнительно', 'Произвольный запрос'], activePanel: 'Фильтр' },
           // tslint:disable-next-line: max-line-length
           { step: 'final', panels: ['Параметры', 'Фильтр', 'Новые значения реквизитов', 'Список объектов', 'Дополнительно'], activePanel: 'Список объектов' },
         ];

@@ -12,11 +12,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { v1 } from 'uuid';
 import { TreeNode } from 'primeng/api';
 import { StorageType, FormListOrder, FormListFilter, FormListSettings, ISuggest, ColumnDef, DocumentOptions, DocumentBase, Type } from 'jetti-middle/dist';
-@Component({ 
+@Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'j-suggest-hierarchy-list',
   templateUrl: './suggest.dialog.hierarchy.component.html'
 })
+// tslint:disable: deprecation
 export class SuggestDialogHierarchyComponent implements OnInit, OnDestroy {
 
   @Input() type: string;
@@ -47,6 +48,7 @@ export class SuggestDialogHierarchyComponent implements OnInit, OnDestroy {
 
   showDeleted = false;
 
+  private _expandedNodeId: string;
   private _debonceSubscription$: Subscription = Subscription.EMPTY;
   private _debonce$ = new Subject<{ col: any, event: any, center: string }>();
   private _docSubscription$: Subscription = Subscription.EMPTY;
@@ -187,7 +189,8 @@ export class SuggestDialogHierarchyComponent implements OnInit, OnDestroy {
   loadNodes(id = null) {
     this.dataSource.listOptions.hierarchyDirectionUp = false;
     if (id && id === this.selectedNode.key) {
-      this.dataSource.listOptions.hierarchyDirectionUp = this.selectedNode.expanded;
+      this.dataSource.listOptions.hierarchyDirectionUp = !this.selectedNode.leaf && !this.selectedNode.expanded;
+      this._expandedNodeId = this.selectedNode.expanded ? this.selectedNode.key : '';
     }
     if (!id) {
       const sel = this.selectedNode;
@@ -217,7 +220,7 @@ export class SuggestDialogHierarchyComponent implements OnInit, OnDestroy {
         collapsedIcon: 'pi pi-folder',
         children: this.buildTreeNodes(tree, el.id) || [],
       };
-      node.expanded = !node.leaf && node.children.length > 0;
+      node.expanded = !node.leaf && (node.children.length > 0 || this._expandedNodeId === node.key);
       return node;
     });
   }
@@ -301,11 +304,12 @@ export class SuggestDialogHierarchyComponent implements OnInit, OnDestroy {
       }
     }
     if (treeNodesVisibleBefore !== this.treeNodesVisible) {
-      if (this.treeNodesVisible && this.selectedRow) { this.id = this.selectedRow.id; this.initNodes = true; }
-      // tslint:disable-next-line: one-line
-      else if (!this.treeNodesVisible && this.selectedNode) { this.id = this.selectedNode.key; }
-      // tslint:disable-next-line: one-line
-      else this.id = null;
+      if (this.treeNodesVisible && this.selectedRow) {
+        this.id = this.selectedRow.id; this.initNodes = true;
+      } else if (!this.treeNodesVisible && this.selectedNode)
+        this.id = this.selectedNode.key;
+      else
+        this.id = null;
       this.caclPageSize();
     }
   }

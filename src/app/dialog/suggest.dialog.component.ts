@@ -17,6 +17,8 @@ import { StorageType, FormListSettings, ISuggest, Type, ColumnDef, DocumentBase,
   selector: 'j-suggest-list',
   templateUrl: './suggest.dialog.component.html'
 })
+
+// tslint:disable: deprecation
 export class SuggestDialogComponent implements OnInit, OnDestroy {
   locale = calendarLocale; dateFormat = dateFormat;
 

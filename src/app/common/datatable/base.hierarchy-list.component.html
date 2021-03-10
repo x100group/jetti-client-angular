@@ -30,19 +30,19 @@
           [scrollHeight]="'calc(100vh - 80px)'">
           <ng-template pTemplate="body" let-rowData let-index="rowIndex">
             <tr [id]="rowData.field">
-              <td style="width: 20px;"
-                (onClick)="setColumnFilterIsActive(rowData, rowData.filter ? !rowData.filter.isActive : true)">
+              <td style="width: 20px; cursor: pointer;"
+                (click)="setColumnFilterIsActive(rowData, rowData.filter ? !rowData.filter.isActive : true)">
                 <i *ngIf="rowData.filter.isActive" style="padding-right: 7px;" class="fa fa-check-square"></i>
-                <i *ngIf="!rowData.filter.isActive" class="far fa-square" style="padding-right: 7px;"></i>
+                <i *ngIf="!rowData.filter.isActive" style="padding-right: 7px;" class="far fa-square"></i>
               </td>
-              <td style="width: 10em;"
+              <td style="width: 10em; cursor: pointer; user-select: none"
                 (click)="setColumnFilterIsActive(rowData, rowData.filter ? !rowData.filter.isActive : true)">
                 {{rowData.field}}
               </td>
-              <td style="width: 138px; text-align: center;">
+              <td style="width: 138px; text-align: center; cursor: pointer;">
                 <p-dropdown optionLabel="label" optionValue="center" [(ngModel)]="rowData.filter.anyTemp"
-                  [options]="usGetMatchOperatorsByType(rowData.type)"
-                  (ngModelChange)="_onColumnMatchOperatorChanged(rowData)" appendTo="body">
+                  [options]="rowData.matchOperators" (onChange)="_onColumnMatchOperatorChanged(rowData)"
+                  appendTo="body">
                 </p-dropdown>
               </td>
               <td [ngSwitch]="rowData.type">
@@ -149,7 +149,7 @@
           <ng-template pTemplate="body" let-rowData let-index="rowIndex">
             <tr *ngIf="true || !columnsSettingsState.isReadonly" [id]="rowData.field" [pReorderableRow]="index"
               (click)="usColumnsInvertHidden(rowData)">
-              <td pReorderableRowHandle>
+              <td pReorderableRowHandle style="cursor: pointer;">
                 <i *ngIf="!rowData.hidden" style="padding-right: 7px;" class="fa fa-check-square"></i>
                 <i *ngIf="rowData.hidden" class="far fa-square" style="padding-right: 7px;"></i>
                 {{rowData.label}}
@@ -304,7 +304,8 @@
 
         </ng-template>
         <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
-          <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode" [ttContextMenuRow]="rowNode" (dblclick)="onNodeClick(rowNode)">
+          <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode" [ttContextMenuRow]="rowNode"
+            (dblclick)="onNodeClick(rowNode)">
             <!-- <td class="ui-resizable-column" [ngStyle]="{'width': '1px', 'text-align': 'center'}"></td> -->
             <td class="ui-resizable-column" *ngFor="let column of columns" [ngStyle]="column.style">
               <span [ngSwitch]="column.type" [id]="column.field">

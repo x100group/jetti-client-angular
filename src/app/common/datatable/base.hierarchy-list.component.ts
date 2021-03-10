@@ -22,7 +22,7 @@ import {
   IUserSettings, FormListColumnProps, IUserSettingsState,
 } from 'jetti-middle';
 import { settingsKind } from 'jetti-middle/dist/common/classes/user-settings';
-
+// tslint:disable: deprecation
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'j-hierarchy-list',
@@ -111,6 +111,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   });
 
   private _windowHeight: number;
+  private _expandedNodeId: string;
 
   group = '';
   columns: ColumnDef[] = [];
@@ -165,6 +166,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this._filterSettingsStateSubscription$ = this._filterSettingsState$
       .pipe(filter(e => e.apply && !this.isRelationList)).subscribe(e => this.onFilterSettingsStateChanged(e));
     this._columnsSettingsStateSubscription$ = this._columnsSettingsState$
+
       .pipe(filter(e => e.apply && !this.isRelationList)).subscribe(e => this.onColumnsSettingsStateChanged(e));
 
     this._docSubscription$ = merge(...[
@@ -246,6 +248,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
         col.filter = new FormListFilter(col.field, operators[0].value);
         col.filter['anyTemp'] = operators[0];
       }
+      col['matchOperators'] = this.usGetMatchOperatorsByType(col.type);
       if (col.type === 'number')
         col.filter.interval = colFilter && colFilter.center === 'beetwen' ? { ...colFilter.right } : { start: null, end: null };
     });
@@ -336,15 +339,28 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   _onColumnMatchOperatorChanged(column: ColumnDef) {
-    const newFilter = { ...column.filter, center: column.filter['anyTemp'].value };
-    if (['in', 'not in'].includes(newFilter.center) && !['in', 'not in'].includes(column.filter.center))
+    const oldFilter = column.filter;
+    const newFilter = { ...oldFilter, center: oldFilter['anyTemp'].value };
+    if (['in', 'not in'].includes(newFilter.center) && !['in', 'not in'].includes(oldFilter.center))
       newFilter.right = newFilter.right ? [newFilter.right] : [];
-    if (['in', 'not in'].includes(column.filter.center) && !['in', 'not in'].includes(newFilter.center))
+    else if (['in', 'not in'].includes(oldFilter.center) && !['in', 'not in'].includes(newFilter.center))
       newFilter.right = Array.isArray(newFilter.right) ? newFilter.right[0] : newFilter.right;
-    if (column.filter.center === 'beetwen' && newFilter.center !== 'beetwen')
-      newFilter.right = newFilter.right.start || newFilter.right.start === 0 ? newFilter.right.start : null;
+    else if (column.type === 'number') {
+      if (oldFilter.center === 'beetwen' && newFilter.center !== 'beetwen')
+        newFilter.right = oldFilter.interval ? oldFilter.interval.start : null;
+      else if (oldFilter.center !== 'beetwen' && newFilter.center === 'beetwen')
+        newFilter.interval = { start: oldFilter.right, end: null };
+    } else if (['date', 'datetime'].includes(column.type)) {
+      if (oldFilter.center === 'beetwen' && newFilter.center !== 'beetwen')
+        newFilter.right = Array.isArray(oldFilter.right) ? oldFilter.right[0] : null;
+      else if (oldFilter.center !== 'beetwen' && newFilter.center === 'beetwen')
+        newFilter.right = oldFilter.right instanceof Date ? [oldFilter.right] : [];
+    }
     column.filter = newFilter;
-    this._filterSettingsState$.next({ ...this._filterSettingsState$.value, isModify: true, apply: false });
+
+    if (newFilter.isActive) this.update(column, newFilter.right, newFilter.center, '', newFilter.isActive);
+    else
+      this._filterSettingsState$.next({ ...this._filterSettingsState$.value, isModify: true, apply: false });
   }
 
   private _update(_filter: FormListFilter) {
@@ -414,12 +430,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       if (['is not null', 'is null'].includes(center))
         newF.right = null;
       else
-        newF.isActive = newF.right && newF.right.id;
+        newF.isActive = !!(newF.right && newF.right.id);
     } else if (['in', 'not in'].includes(center)) {
-      if (Array.isArray(newF.right) &&
-        Array.isArray(oldF.right) &&
-        column.type !== 'enum' &&
-        oldF.right.map(e => e.id).join() === newF.right.map(e => e.id).join()) return; // same array
       newF.isActive = Array.isArray(newF.right) && newF.right.length > 0;
     } else if (['date', 'datetime'].includes(column.type) && newF.right && center === 'beetwen') {
       if ((Array.isArray(newF.right) && (!newF.right[0] || !newF.right[1]))) return;
@@ -431,7 +443,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
     if (this.filterSettingsState.isReadonly) this.copySettings('filter');
     this._usNextState({ ...this.filterSettingsState, isModify: true, apply: false }, 'filter');
-    if (!newF.isActive && newF.isActive === oldF.isActive) return;
+    // if (!newF.isActive && newF.isActive === oldF.isActive) return;
 
     this._debonce$.next(newF);
   }
@@ -447,7 +459,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   loadNodes(id = null) {
     this.dataSource.listOptions.hierarchyDirectionUp = false;
     if (id && id === this.selectedNode.key) {
-      this.dataSource.listOptions.hierarchyDirectionUp = this.selectedNode.children.length === 0;
+      this.dataSource.listOptions.hierarchyDirectionUp = !this.selectedNode.leaf && !this.selectedNode.expanded;
+      this._expandedNodeId = this.selectedNode.expanded ? this.selectedNode.key : '';
     }
     if (!id) {
       const sel = this.selectedNode;
@@ -475,7 +488,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
         collapsedIcon: 'pi pi-folder',
         children: this.buildTreeNodes(tree, el.id) || [],
       };
-      node.expanded = !node.leaf && node.children.length > 0;
+      node.expanded = !node.leaf && (node.children.length > 0 || this._expandedNodeId === node.key);
       return node;
     });
   }
@@ -734,6 +747,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
 
   onColResize(event) {
+    if (this.isRelationList) return;
     if (this.columnsSettingsState.isReadonly) this.copySettings('columns');
     const col = this._getColumnByElement(event.element);
     if (!col) console.log('Unknow col: ' + event.element.outerText);
@@ -747,6 +761,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   onColReorder(columns) {
+    if (this.isRelationList) return;
     if (this.columnsSettingsState.isReadonly) this.copySettings('columns');
     this.settings.columns.order = columns.map(e => e.field);
     this.usApplyColumnsProps();
