@@ -921,7 +921,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
         icon: 'fa fa-question-circle',
         accept: this.deleteSettingsConfirmationHandler.bind(this, kind, true),
         reject: this.deleteSettingsConfirmationHandler.bind(this, kind, false),
-        key: this.id
+        key: `list: ${this.id}`
       });
     else
       this.uss.deleteSettings(state.selected).then(e => {
