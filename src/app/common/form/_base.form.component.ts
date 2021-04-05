@@ -76,6 +76,7 @@ export class _baseDocFormComponent implements OnDestroy, OnInit, IFormEventsMode
     return (new Function('', m.module || '{}').bind(this)());
   }));
 
+  get accces() { return this.data['access'] as { readOnly?: boolean, denied?: boolean }; }
   get form() { return this._form$.value; }
   get viewModel() { return this.form.getRawValue(); }
   get metadata() { return <DocumentOptions>this.form['metadata']; }
@@ -141,9 +142,15 @@ export class _baseDocFormComponent implements OnDestroy, OnInit, IFormEventsMode
 
   ngOnInit() {
 
+    // if (this.accces && this.accces.denied) { this.ds.openSnackBar('error', 'Access denied!', ''); this._close(); return; }
+
     this.isCopy = !!this.route.snapshot.queryParams.copy;
     this.isHistory = !!this.route.snapshot.queryParams.history;
-    this.readonly = !this.isHistory && this.auth.isRoleAvailableReadonly();
+    this.readonly = this.isHistory || this.accces.readOnly;
+
+    // (this.auth.isReadonlyType(this.type,
+    //   this.type === 'Document.Operation' && this.data['metadata'].Group.id
+    // ));
 
     this._subscription$ = merge(...[this.ds.save$, this.ds.delete$, this.ds.post$, this.ds.unpost$]).pipe(
       filter(doc => doc.id === this.id))
@@ -363,6 +370,7 @@ export class _baseDocFormComponent implements OnDestroy, OnInit, IFormEventsMode
     this._descriptionSubscription$.unsubscribe();
     this._saveCloseSubscription$.unsubscribe();
     this._postSubscription$.unsubscribe();
-    this.ds.showDialog(this._uuid, this.form.getRawValue() as DocumentBase);
+    if (this.form)
+      this.ds.showDialog(this._uuid, this.form.getRawValue() as DocumentBase);
   }
 }

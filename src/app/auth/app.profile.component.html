@@ -3,7 +3,7 @@
     <div class="profile" [ngClass]="{'profile-expanded':active}">
       <a href="#" (click)="onClick($event)">
         <img *ngIf="this.image" class="profile-image" [src]="this.image">
-         <span class="profile-name">{{ (appAuth.userProfile$ | async)?.account?.description }}</span>
+        <span class="profile-name">{{ (appAuth.userProfile$ | async)?.account?.description }}</span>
         <i class="fa fa-fw fa-caret-down"></i>
         <span class="profile-role">{{ (appAuth.userProfile$ | async)?.account?.email }}</span>
       </a>
@@ -20,7 +20,7 @@
         </div>
       </li>
       <li role="menuitem">
-        <a style="cursor: pointer" [attr.tabindex]="!active ? '-1' : null">
+        <a style="cursor: pointer" (click)="loadUserPermission()" [attr.tabindex]="!active ? '-1' : null">
           <i class="fa fa-fw fa-user-secret"></i>
           <span>Privacy</span>
         </a>
@@ -30,9 +30,9 @@
         </div>
       </li>
       <li role="menuitem">
-        <a style="cursor: pointer" [attr.tabindex]="!active ? '-1' : null">
+        <a style="cursor: pointer" (click)="viewAs()" [attr.tabindex]="!active ? '-1' : null">
           <i class="fa fa-fw fa-cog"></i>
-          <span>Settings</span>
+          <span>View as...</span>
         </a>
         <div class="layout-menu-tooltip">
           <div class="layout-menu-tooltip-arrow"></div>

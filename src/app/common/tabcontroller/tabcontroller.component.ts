@@ -61,6 +61,7 @@ export class TabControllerComponent {
   }
 
   private getTabTitle(detail) {
+    if (detail.tabData) return detail.tabData;
     if (detail instanceof FormGroup) {
       const doc = detail.getRawValue();
       const metadata = detail['metadata'];

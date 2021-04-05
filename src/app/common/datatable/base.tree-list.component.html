@@ -1,6 +1,6 @@
-<div style="width: 300px; margin-right: 2px">
+<div style="display: flex; flex-direction: column; overflow-x: hidden; min-width: 20em; width: 100%">
   <p-toolbar *ngIf="showCommands">
-    <div class="ui-toolbar-group-left">
+    <!-- <div class="ui-toolbar-group-left">
       <button pButton type="button" icon="pi pi-plus" class="ui-button-success" (click)="add()"
         [disabled]="(lds.busy$ | async)"></button>
       <button pButton type="button" icon="far fa-edit" class="ui-button-secondary" (click)="open()"
@@ -9,25 +9,12 @@
         [disabled]="(lds.busy$ | async)" *ngIf="selection?.data?.id"></button>
       <button pButton type="button" icon="far fa-trash-alt" class="ui-button-danger" (click)="delete()"
         *ngIf="selection?.data?.id"></button>
-    </div>
+    </div> -->
   </p-toolbar>
-  <p-treeTable [value]="treeNodes$ | async" [scrollable]="true" [scrollHeight]="scrollHeight" selectionMode="single"
-    dataKey="id" [(selection)]="selection" (onNodeSelect)="onNodeSelect($event)">
-    <ng-template pTemplate="header">
-      <tr>
-        <th>folders</th>
-      </tr>
-      <tr>
-        <th>description</th>
-      </tr>
+  <p-tree [value]="meta.tree$ | async" selectionMode="single" [(selection)]="selection"
+    (onNodeSelect)="onNodeSelect($event)" [ngStyle]="{'width': 'inherit'}">
+    <ng-template let-node pTemplate="default">
+      <b>{{node.label}}</b>
     </ng-template>
-    <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
-      <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode">
-        <td style="width: 298px">
-          <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
-          {{rowData.description}}
-        </td>
-      </tr>
-    </ng-template>
-  </p-treeTable>
+  </p-tree>
 </div>

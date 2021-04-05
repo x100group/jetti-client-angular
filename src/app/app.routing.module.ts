@@ -8,6 +8,7 @@ import { TabControllerComponent } from './common/tabcontroller/tabcontroller.com
 import { TabsStore } from './common/tabcontroller/tabs.store';
 import { ApiService } from './services/api.service';
 import { IViewModel } from 'jetti-middle/dist';
+import { MetaTreeNode } from './common/metadata.service';
 
 export class AppRouteReuseStrategy extends RouteReuseStrategy {
   shouldDetach(route: ActivatedRouteSnapshot): boolean { return false; }
@@ -20,7 +21,7 @@ export class AppRouteReuseStrategy extends RouteReuseStrategy {
 }
 
 @Injectable()
-export class TabResolver implements Resolve<FormGroup | IViewModel | null> {
+export class TabResolver implements Resolve<FormGroup | IViewModel | null | { tabData: { header: string } }> {
   constructor(private dfs: DynamicFormService, private api: ApiService, private tabStore: TabsStore) { }
 
   public resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
@@ -28,6 +29,7 @@ export class TabResolver implements Resolve<FormGroup | IViewModel | null> {
     const type = route.params.type;
     const group = route.params.group || '';
     if (type === 'home') return null;
+    if (type === 'meta') return { tabData: { header: 'Meta TREE' } };
     if (type.startsWith('Form.')) { return this.dfs.getFormView$(type); }
     if (this.tabStore.state.tabs.findIndex(i => i.type === type && i.id === id && i.group === group) === -1) {
       return id ?

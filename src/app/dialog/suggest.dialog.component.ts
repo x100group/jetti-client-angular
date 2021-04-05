@@ -60,7 +60,8 @@ export class SuggestDialogComponent implements OnInit, OnDestroy {
     public route: ActivatedRoute, public router: Router, private auth: AuthService) { }
 
   async ngOnInit() {
-    this.readonly = this.auth.isRoleAvailableReadonly();
+
+    this.readonly = this.auth.isReadonlyType(this.type);
 
     const columns: ColumnDef[] = [];
     const data: { [x: string]: string }[] = [{ description: 'string' }, { code: 'string' }, { id: 'string' }];
@@ -100,7 +101,7 @@ export class SuggestDialogComponent implements OnInit, OnDestroy {
       map(rows => rows.find(r => r.id === this.id)),
       filter(row => row !== undefined)).subscribe(row => {
         this.selection = [row as DocumentBase];
-        if (this.tl) this.tl.setSelection(row.parent['id']);
+        // if (this.tl) this.tl.setSelection(row.parent['id']);
       });
 
     this._debonceSubscription$ = this.debonce$.pipe(debounceTime(500))

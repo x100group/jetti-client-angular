@@ -1,7 +1,7 @@
 <div [ngStyle]="{'display':'flex'}" [class]="'scroll-' + type" [id]="type">
 
   <div style="display: flex; flex-direction: column;">
-    <p-toolbar *ngIf="!readonly">
+    <p-toolbar>
       <div class="ui-toolbar-group-left">
         <button id="add" icon="fa fa-plus" class="ui-button-success" pButton type="button" (click)="add()"
           [disabled]="(lds.busy$ | async)"></button>
@@ -15,7 +15,7 @@
         <button id="delete" icon="far fa-trash-alt" class="ui-button-danger" pButton type="button" (click)="delete()"
           [disabled]="(lds.busy$ | async)" *ngIf="selectionData"></button>
       </div>
-      <div class="ui-toolbar-group-right">
+      <div *ngIf="!readonly" class="ui-toolbar-group-right">
         <button pButton type="button" [label]="(this.showDeleted ? 'Hide ' : 'Show ') + 'deleted'"
           class="ui-button-secondary" (click)="showDeletedSet(!this.showDeleted, true)"
           [disabled]="(lds.busy$ | async)"></button>

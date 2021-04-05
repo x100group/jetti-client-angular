@@ -16,6 +16,7 @@ import { Ref, IViewModel } from 'jetti-middle/dist';
 import { FormListOrder, FormListFilter, FormListSettings, UserDefaultsSettings } from 'jetti-middle/dist';
 import { AccountRegister } from 'jetti-middle/dist';
 import { IUserSettings } from 'jetti-middle/dist/common/classes/user-settings';
+import { MetaTreeNode } from '../common/metadata.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -339,4 +340,10 @@ export class ApiService {
     const query = `${environment.auth}subsystems/menu`;
     return this.http.get<MenuItem[]>(query);
   }
+
+  treeMetaDescendants(node: Partial<MetaTreeNode>): Observable<MetaTreeNode[]> {
+    const query = `${environment.api}treeMeta/descendants`;
+    return this.http.post<MetaTreeNode[]>(query, node);
+  }
+
 }

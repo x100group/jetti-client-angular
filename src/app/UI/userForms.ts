@@ -9,9 +9,11 @@ import { SearchAndReplaceComponent } from './Forms/search-and-replace.component'
 import { BaseHierarchyListComponent } from '../common/datatable/base.hierarchy-list.component';
 import { ObjectsGroupModifyComponent } from './Forms/ObjectsGroupModify.form.component';
 import { QueueManagerComponent } from './Forms/queue-manager.form.component';
+import { BaseTreeListComponent } from './../common/datatable/base.tree-list.component';
 
 const userForms: { [x: string]: { formComponent: Type<any>, listComponent: Type<any> } } = {
   'home': { formComponent: HomeComponent, listComponent: HomeComponent },
+  'meta': { formComponent: BaseTreeListComponent, listComponent: BaseTreeListComponent },
   'Document.Operation': { formComponent: BaseDocFormComponent, listComponent: OperationListComponent },
   'Form.PostAfterEchange': { formComponent: SyncFormComponent, listComponent: SyncFormComponent },
   'Form.BusinessProcessTasks': { formComponent: TaskListComponent, listComponent: TaskListComponent },

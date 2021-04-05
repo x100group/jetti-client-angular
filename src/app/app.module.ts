@@ -18,6 +18,7 @@ import { RoutingModule } from './app.routing.module';
 import { AppTopBarComponent } from './app.topbar.component';
 import { AppProfileComponent } from './auth/app.profile.component';
 import { AuthService } from './auth/auth.service';
+import { MetadataService } from './common/metadata.service';
 import { MaterialModule } from './material.module';
 import { PrimeNGModule } from './primeNG.module';
 import { DynamicFormsModule } from './UI/dynamic.froms.module';
@@ -52,6 +53,7 @@ export function getJwtToken(): string {
   providers: [
     { provide: LOCALE_ID, useValue: 'ru-RU' },
     AuthService,
+    MetadataService,
     { provide: HTTP_INTERCEPTORS, useClass: ApiInterceptor, multi: true }
   ],
   entryComponents: [],

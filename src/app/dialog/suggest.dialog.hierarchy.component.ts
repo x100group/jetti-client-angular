@@ -72,7 +72,7 @@ export class SuggestDialogHierarchyComponent implements OnInit, OnDestroy {
     public route: ActivatedRoute, public router: Router, private auth: AuthService) { }
 
   async ngOnInit() {
-    this.readonly = this.auth.isRoleAvailableReadonly();
+    this.readonly = this.auth.isReadonlyType(this.type);
     const data = [{ description: 'string' }, { code: 'string' }, { id: 'string' }];
     if (this.type) {
       if (!this.type.startsWith('Types.')) this.doc = await this.api.getDocMetaByType(this.type);

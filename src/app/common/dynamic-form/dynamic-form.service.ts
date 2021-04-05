@@ -58,6 +58,8 @@ function toFormGroup(controls: FormControlInfo[]) {
 export const patchOptionsNoEvents = { onlySelf: false, emitEvent: false, emitModelToViewChange: false, emitViewToModelChange: false };
 
 export function getFormGroup(schema: { [x: string]: any }, model: { [x: string]: any }, isExists: boolean): FormGroup {
+
+  if (!model) return new FormGroup({});
   let controls: FormControlInfo[] = [];
 
   const processRecursive = (v: { [x: string]: any }, f: FormControlInfo[]) => {
@@ -212,6 +214,7 @@ export class DynamicFormService {
       map(response => {
         const form = getFormGroup(response.schema, response.model, docID !== 'new');
         form['metadata'] = response.metadata;
+        form['access'] = response.access;
         return form;
       }));
   }

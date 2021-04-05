@@ -28,6 +28,7 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { AccordionModule } from 'primeng/accordion';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeTableModule } from 'primeng/treetable';
+import { TreeModule } from 'primeng/tree';
 import { SlideMenuModule } from 'primeng/slidemenu';
 import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
 import { DataViewModule } from 'primeng/dataview';
@@ -56,6 +57,7 @@ import { SidebarModule } from 'primeng/sidebar';
     // MessagesModule,
     // MessageModule,
     TreeTableModule,
+    TreeModule,
     SelectButtonModule,
     InputTextModule,
     // ChipsModule,

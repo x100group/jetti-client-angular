@@ -153,6 +153,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       this.data = { schema: DocMeta.Props, metadata: DocMeta.Prop as DocumentOptions, columnsDef: [], model: {}, settings: this.settings };
     }
 
+    this.readonly = this.readonly || this.auth.isReadonlyType(this.type, this.group);
+
     // default filters is always active
     this.settings.filter.forEach(e => e.isActive = true);
 
@@ -827,7 +829,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   usGetMatchOperatorsByType(type: string) {
-    return (matchOperatorByType[type] || matchOperatorByType['default']).map(e => ({ label: e, value: e }));
+    return (matchOperatorByType[type] || matchOperatorByType['default'])
+      // .filter(e => !['in group', 'not in group'].includes(e))
+      .map(e => ({ label: e, value: e }));
   }
 
   _cloneSettings(us: IUserSettings, partial: Partial<IUserSettings>): IUserSettings {

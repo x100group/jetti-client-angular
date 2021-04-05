@@ -8,6 +8,7 @@ import { v1 } from 'uuid';
 import { DocService } from '../../common/doc.service';
 import { ApiService } from '../../services/api.service';
 import { LoadingService } from '../loading.service';
+import { MetadataService } from '../metadata.service';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,43 +20,51 @@ export class BaseTreeListComponent implements OnInit, OnDestroy {
   @Input() type: string;
   @Input() showCommands = true;
   @Input() scrollHeight = `${(window.innerHeight - 275)}px`;
+
   treeNodes$: Observable<TreeNode[]>;
   treeNodes: TreeNode[] = [];
   selection: TreeNode;
 
-  private paginator = new Subject<DocumentBase>();
-  private _docSubscription$: Subscription = Subscription.EMPTY;
-
   // tslint:disable-next-line: max-line-length
-  constructor(private api: ApiService, public router: Router, public ds: DocService, public lds: LoadingService, private cd: ChangeDetectorRef) { }
+  constructor(public meta: MetadataService, private api: ApiService, public router: Router, public ds: DocService, public lds: LoadingService, private cd: ChangeDetectorRef) { }
+
+  ngOnDestroy(): void {
+
+  }
+
 
   ngOnInit() {
 
-    this._docSubscription$ = merge(...[this.ds.save$, this.ds.delete$, this.ds.saveClose$, this.ds.goto$]).pipe(
-      filter(doc => doc && doc.type === this.type)).
-      subscribe(doc => this.paginator.next(doc));
 
-    this.treeNodes$ = this.paginator.pipe(
-      switchMap(doc => {
-        return this.api.tree(this.type).pipe(
-          map(tree => <TreeNode[]>[{
-            label: '(All)',
-            data: { id: undefined, description: '(All)', type: this.type, value: null, code: null },
-            expanded: true,
-            expandedIcon: 'fa fa-folder-open',
-            collapsedIcon: 'fa fa-folder',
-            children: this.buildTreeNodes(tree, null),
-          }]),
-          tap(treeNodes => {
-            this.treeNodes = treeNodes;
-          }));
-      }));
-    setTimeout(() => this.paginator.next());
+    // this.treeNodes$ = this.paginator.pipe(
+    //   switchMap(doc => {
+    //     return this.api.tree(this.type).pipe(
+    //       map(tree => <TreeNode[]>[{
+    //         label: '(All)',
+    //         data: { id: undefined, description: '(All)', type: this.type, value: null, code: null },
+    //         expanded: true,
+    //         expandedIcon: 'fa fa-folder-open',
+    //         collapsedIcon: 'fa fa-folder',
+    //         children: this.buildTreeNodes(tree, null),
+    //       }]),
+    //       tap(treeNodes => {
+    //         this.treeNodes = treeNodes;
+    //       }));
+    //   }));
+    // setTimeout(() => this.paginator.next());
 
     // this.hotkeys.addShortcut({ keys: 'Insert', description: 'Add' }).subscribe(() => { this.add(); });
     // this.hotkeys.addShortcut({ keys: 'F2', description: 'Open' }).subscribe(() => { this.open(); });
     // this.hotkeys.addShortcut({ keys: 'F9', description: 'Copy' }).subscribe(() => { this.copy(); });
     // this.hotkeys.addShortcut({ keys: 'Delete', description: 'Delete' }).subscribe(() => { this.delete(); });
+  }
+
+  async onNodeSelect(event: { node: TreeNode, origin: any }) {
+    debugger;
+    if (!event.node.leaf) return;
+    if (!event.node.children.length)
+      await this.meta.loadNodeChildren(event.node);
+    if (event.node.children.length) event.node.expanded = true;
   }
 
   private findDoc(tree: TreeNode[], id: string): TreeNode | undefined {
@@ -68,10 +77,7 @@ export class BaseTreeListComponent implements OnInit, OnDestroy {
     }
   }
 
-  setSelection(id: string) {
-    this.selection = this.findDoc(this.treeNodes, id);
-    this.cd.markForCheck();
-  }
+
 
   private buildTreeNodes(tree: ITree[], parent: string | null): TreeNode[] {
     return tree.filter(el => el.parent === parent).map(el => {
@@ -86,32 +92,4 @@ export class BaseTreeListComponent implements OnInit, OnDestroy {
     });
   }
 
-  add() {
-    const id = v1().toUpperCase();
-    this.router.navigate([this.type, id],
-      { queryParams: { new: id, isfolder: true, parent: this.selection.data.id } });
-  }
-
-  copy() {
-    const id = v1().toUpperCase();
-    this.router.navigate([this.type, id],
-      { queryParams: { copy: this.selection.data.id, isfolder: true, parent: this.selection.data.id } });
-  }
-
-  open = () => {
-    this.router.navigate([this.type, this.selection.data.id], { queryParams: {} });
-  }
-
-  delete = () => this.ds.delete(this.selection.data.id);
-
-  onDragEnd(event) {
-  }
-
-  onNodeSelect(event) {
-    this.selectionChange.emit(event.node);
-  }
-
-  ngOnDestroy() {
-    this._docSubscription$.unsubscribe();
-  }
 }
