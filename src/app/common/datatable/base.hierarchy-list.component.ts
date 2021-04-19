@@ -199,7 +199,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       });
 
     this._pageSizeSubscription$ = combineLatest([this._pageSize$.pipe(debounceTime(50)), this.isInitComplete$])
-      .pipe(filter(latest => !!latest[1]))
+      .pipe(filter(latest => !!latest[1] || this.isRelationList))
       .subscribe(latest => this.pageSizeSubscriptionHandler(latest[0]));
 
     this._debonceSubscription$ = this._debonce$.pipe(debounceTime(1000))
@@ -364,6 +364,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private _update(_filter: FormListFilter) {
+    debugger
     if (!_filter.left) return;
     this.setColumnFilter(_filter);
     this.settings.filter = [_filter, ...this.settings.filter.filter(e => e.left !== _filter.left)];
