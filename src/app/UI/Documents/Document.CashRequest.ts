@@ -84,7 +84,7 @@ export class DocumentCashRequestComponent extends _baseDocFormComponent implemen
     Возврат оплаты клиенту`.indexOf(operation) !== -1) this.form.get('Contract').enable({ emitEvent: false }); else this.form.get('Contract').disable({ emitEvent: false });
 
     if (`Перечисление налогов и взносов
-    Прочий расход ДС`.indexOf(operation) !== -1) this.form.get('ExpenseOrBalance').enable({ emitEvent: false }); else this.form.get('ExpenseOrBalance').disable({ emitEvent: false });
+    Прочий расход ДС`.indexOf(operation) !== -1 || (operation !== 'Перечисление налогов и взносов' && this.CashKind === 'CASH')) this.form.get('ExpenseOrBalance').enable({ emitEvent: false }); else this.form.get('ExpenseOrBalance').disable({ emitEvent: false });
 
     if (`Оплата по кредитам и займам полученным
     Выдача займа контрагенту`.indexOf(operation) !== -1) this.form.get('Loan').enable({ emitEvent: false }); else this.form.get('Loan').disable({ emitEvent: false });
@@ -238,6 +238,7 @@ export class DocumentCashRequestComponent extends _baseDocFormComponent implemen
         { onlySelf: false, emitEvent: false }
       );
     }
+    this.onOperationChanges(this.Operation)
   }
 
   StartProcess() {
