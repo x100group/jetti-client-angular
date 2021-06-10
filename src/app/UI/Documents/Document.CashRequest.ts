@@ -93,7 +93,7 @@ export class DocumentCashRequestComponent extends _baseDocFormComponent implemen
     TaxOfficeCode2
     TaxPayerStatus
     TaxBasisPayment
-    TaxPaymentPeriod`.split('\n').forEach(el => { this.vk[el.trim()].required = operation === 'Перечисление налогов и взносов' });
+    TaxPaymentPeriod`.split('\n').forEach(el => { this.vk[el.trim()].required = false });
 
     this.vk['CashOrBank'].required = operation === 'Выплата заработной платы';
     this.vk['SalaryAnalitics'].required = operation.includes('Выплата заработной платы');
