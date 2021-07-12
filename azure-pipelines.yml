@@ -19,7 +19,7 @@ steps:
   inputs:
     command: 'install'
     artifactoryService: 'artifactory-x100'
-    sourceRepo: 'npm-local'
+    sourceRepo: 'npm'
     
 - script: |
     ls -la
