@@ -24,5 +24,7 @@ steps:
 - script: |
     ls -la
     ls -la ./.jfrog/projects
+    cat ./.jfrog/projects/npm.yaml
+
 
 
