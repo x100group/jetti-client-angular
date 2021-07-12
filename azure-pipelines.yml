@@ -23,3 +23,5 @@ steps:
     
 - script: |
     ls -la
+    ls -la ./.jfrog
+
