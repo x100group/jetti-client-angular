@@ -6,25 +6,32 @@ trigger:
 pool:
   vmImage: ubuntu-18.04
 
-steps:
-- checkout: self
-  persistCredentials: true
-
-- task: NodeTool@0
-  inputs:
-    versionSpec: '14.x'
-  displayName: 'Install Node.js'
-
-- task: ArtifactoryNpm@2
-  inputs:
-    command: 'install'
-    artifactoryService: 'artifactory-x100'
-    sourceRepo: 'npm'
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
     
-- script: |
-    ls -la
-    ls -la ./.jfrog/projects
-    cat ./.jfrog/projects/npm.yaml
+    - script: |
+        docker build -t repository.jfd-prod.x100platforma.com/docker-local/finance/x100group.jetti-front:$(tag) .
+      displayName: 'Docker build'
 
-
-
+    - task: ArtifactoryDocker@1
+      inputs:
+        command: 'push'
+        artifactoryService: 'artifactory-x100'
+        targetRepo: 'docker-local'
+        imageName: 'repository.jfd-prod.x100platforma.com/docker-local/finance/x100group.jetti-front:$(tag)'
+        collectBuildInfo: true
+        buildName: '$(Build.DefinitionName)'
+        buildNumber: '$(Build.BuildNumber)'
+    
+    - task: ArtifactoryPublishBuildInfo@1
+      inputs:
+        artifactoryService: 'artifactory-x100'
+        buildName: '$(Build.DefinitionName)'
+        buildNumber: '$(Build.BuildNumber)'
