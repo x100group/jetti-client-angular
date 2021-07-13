@@ -1,7 +1,7 @@
 import { Configuration } from 'msal';
 import { MsalAngularConfiguration } from '@azure/msal-angular';
 
-const domain = 'https://jetti-backend-sm.app.gke-dev.x100-apps.com/'; // 'https://jetti-api.azurewebsites.net'; // 'http://localhost:3000';
+const domain = 'https://jetti-backend-sm.app.gke-dev.x100-apps.com'; // 'https://jetti-api.azurewebsites.net'; // 'http://localhost:3000';
 const BPAPI = 'https://bp.x100-group.com/JettiProssscesses/hs';
 
 export const environment = {
@@ -46,4 +46,3 @@ export const MsalAngularConfig: MsalAngularConfiguration = {
   protectedResourceMap,
   extraQueryParameters: {}
 };
-
