@@ -373,6 +373,11 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   async update(column: ColumnDef, right: any, center: matchOperator = 'like', startEnd = 'start' || 'end', isActive?: boolean) {
 
+    if (!right || (typeof right === 'object' && typeof right !== 'boolean' && !right.value && !(Array.isArray(right)))) {
+      this.id = null;
+      right = null;
+    }
+
     if (!column) return;
 
     if (center === '=' &&
@@ -452,7 +457,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     if (!this._isInitComplete$.value) return;
     this.multiSortMeta = event.multiSortMeta;
     this.prepareDataSource();
-    if (this.id) this.goto(this.id);
+    if (this.id) this.dataSource.sort();
     else this.isCatalog ? this.first() : this.last();
   }
 
