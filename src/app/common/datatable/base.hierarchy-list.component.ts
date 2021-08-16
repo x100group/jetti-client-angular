@@ -364,7 +364,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private _update(_filter: FormListFilter) {
-    debugger
     if (!_filter.left) return;
     this.setColumnFilter(_filter);
     this.settings.filter = [_filter, ...this.settings.filter.filter(e => e.left !== _filter.left)];
@@ -383,7 +382,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       if (right && right.id) type = await this.ds.api.getIndexedOperationType(right.id);
       if (this.type !== type) {
         this.settings.filter = [
-          ...this.settings.filter.filter(e => e.isActive),
+          ...this.settings.filter.filter(e => e.isActive && e.left !== 'Operation'),
           { left: 'Operation', center: '=', right: right, isActive: !!right.id }];
         this.type = type;
         this.dataSource.type = this.type;
