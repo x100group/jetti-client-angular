@@ -373,7 +373,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   async update(column: ColumnDef, right: any, center: matchOperator = 'like', startEnd = 'start' || 'end', isActive?: boolean) {
 
-    if (!right || (typeof right === 'object' && typeof right !== 'boolean' && !right.value && !(Array.isArray(right)))) {
+    if ((!right && right !== false) || (typeof right === 'object' && typeof right !== 'boolean' && !right.value && !(Array.isArray(right)))) {
       this.id = null;
       right = null;
     }
