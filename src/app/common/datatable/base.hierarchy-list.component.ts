@@ -364,7 +364,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private _update(_filter: FormListFilter) {
-    debugger
     if (!_filter.left) return;
     this.setColumnFilter(_filter);
     this.settings.filter = [_filter, ...this.settings.filter.filter(e => e.left !== _filter.left)];
@@ -373,6 +372,11 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   async update(column: ColumnDef, right: any, center: matchOperator = 'like', startEnd = 'start' || 'end', isActive?: boolean) {
+
+    if ((!right && right !== false) || (typeof right === 'object' && typeof right !== 'boolean' && !right.value && !(Array.isArray(right)))) {
+      this.id = null;
+      right = null;
+    }
 
     if (!column) return;
 
@@ -383,7 +387,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       if (right && right.id) type = await this.ds.api.getIndexedOperationType(right.id);
       if (this.type !== type) {
         this.settings.filter = [
-          ...this.settings.filter.filter(e => e.isActive),
+          ...this.settings.filter.filter(e => e.isActive && e.left !== 'Operation'),
           { left: 'Operation', center: '=', right: right, isActive: !!right.id }];
         this.type = type;
         this.dataSource.type = this.type;
@@ -453,7 +457,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     if (!this._isInitComplete$.value) return;
     this.multiSortMeta = event.multiSortMeta;
     this.prepareDataSource();
-    if (this.id) this.goto(this.id);
+    if (this.id) this.dataSource.sort();
     else this.isCatalog ? this.first() : this.last();
   }
 

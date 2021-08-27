@@ -33,6 +33,7 @@ import { DialogService } from 'primeng/api';
 import { InputValueDialogComponent } from './../dialog/input-value.dialog.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { JNgSelectComponent } from '../common/multiselect/ng.select.component';
+import { AngularEditorModule } from '@kolkov/angular-editor';
 
 @NgModule({
   declarations: [
@@ -80,6 +81,7 @@ import { JNgSelectComponent } from '../common/multiselect/ng.select.component';
     MaterialModule,
     PipesModule,
     PrimeNGModule,
+    AngularEditorModule
   ],
   exports: [
     CommonModule,
