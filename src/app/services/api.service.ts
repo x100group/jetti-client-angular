@@ -79,9 +79,10 @@ export class ApiService {
     return (this.http.get<boolean>(query)).toPromise();
   }
 
-  async isCountryByCompany(companyId: string, countryCode: string): Promise<boolean> {
-    const code = await this.getObjectPropertyById(companyId, 'Country.code');
-    return code && code === countryCode;
+  isCountryByCompany(companyId: string, countryCode: string): Promise<boolean> {
+    return this.getObjectPropertyById(companyId, 'Country.code').then(code => {
+      return code && code === countryCode;
+    });
   }
 
   getObjectPropertyById(id: string, valuePath: string): Promise<any> {
