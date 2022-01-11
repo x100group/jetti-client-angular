@@ -383,10 +383,10 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   async update(column: ColumnDef, right: any, center: matchOperator = 'like', startEnd = 'start' || 'end', isActive?: boolean) {
 
-    if ((!right && right !== false && right !== '') || (typeof right === 'object' && !right.value && !(Array.isArray(right)))) {
-      this.id = null;
-      right = null;
-    }
+    // if ((!right && right !== false && right !== '') || (typeof right === 'object' && !right.value && !(Array.isArray(right)))) {
+    //   this.id = null;
+    //   right = null;
+    // }
 
     if (!column) return;
 
@@ -738,7 +738,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private listenRefresh(id: string) {
     // this.selection = [];
     this.dataSource.result$.pipe(take(1)).subscribe(d => {
-      if (d.length > 0 && !this.treeNodesVisible) {
+      if (d.length > 0) {
         const row = d.find(el => el.id === id);
         if (row) this.id = row.id;
       }

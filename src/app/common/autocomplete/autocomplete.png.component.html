@@ -60,7 +60,7 @@
       <p-autoComplete #ac [formControl]="suggest" [suggestions]="Suggests$ | async" [required]="required"
         [readonly]="readOnly" autocomplete="off" (completeMethod)="getSuggests($event.query)" field="value"
         (onSelect)="searchComplete(suggest.value)" [inputStyle]="inputStyle" dataKey="id"
-        (onFocus)="this.focus.emit($event)" (onBlur)="onBlur($event)" [autoHighlight]="true" spellcheck="false"
+        (onFocus)="this.focus.emit($event)" (onClear)="onClear($event)" [autoHighlight]="true" spellcheck="false"
         appendTo="body" [disableControl]="suggest.disabled">
 
 
