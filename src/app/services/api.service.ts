@@ -17,8 +17,20 @@ import { FormListOrder, FormListFilter, FormListSettings, UserDefaultsSettings }
 import { AccountRegister } from 'jetti-middle/dist';
 import { IUserSettings } from 'jetti-middle/dist/common/classes/user-settings';
 
+class cached<T> {
+  constructor(private _data: Map<string, T>, private _defaultValue?: T) { }
+  get(key: string): T {
+    return this._data.get(key) || this._defaultValue;
+  }
+  set(key: string, value: T) {
+    this._data.set(key, value);
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
+
+  private _indexedOperationsTypes: cached<string>;
 
   constructor(private http: HttpClient, public lds: LoadingService) { }
 
@@ -67,10 +79,9 @@ export class ApiService {
     return (this.http.get<boolean>(query)).toPromise();
   }
 
-  isCountryByCompany(companyId: string, countryCode: string): Promise<boolean> {
-    return this.getObjectPropertyById(companyId, 'Country.code').then(code => {
-      return code && code === countryCode;
-    });
+  async isCountryByCompany(companyId: string, countryCode: string): Promise<boolean> {
+    const code = await this.getObjectPropertyById(companyId, 'Country.code');
+    return code && code === countryCode;
   }
 
   getObjectPropertyById(id: string, valuePath: string): Promise<any> {
@@ -89,8 +100,19 @@ export class ApiService {
   }
 
   async getIndexedOperationType(operationId: string): Promise<string> {
-    const query = `${environment.api}getIndexedOperationType/${operationId}`;
-    return (this.http.get<string>(query)).toPromise();
+    if (!this._indexedOperationsTypes) {
+      const operations = await this.getIndexedOperationsTypes()
+      this._indexedOperationsTypes = new cached<string>(operations, 'Document.Operation');
+    }
+    return this._indexedOperationsTypes.get(operationId);
+    // const query = `${environment.api}getIndexedOperationType/${operationId}`;
+    // return (this.http.get<string>(query)).toPromise();
+  }
+
+  async getIndexedOperationsTypes(): Promise<Map<string, string>> {
+    const query = `${environment.api}getIndexedOperationsTypes`;
+    const entries = await (this.http.get<[[string, string]]>(query)).toPromise();
+    return new Map(entries);
   }
 
   formControlRef(id: string): Promise<RefValue> {
