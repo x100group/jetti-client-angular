@@ -1,11 +1,25 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Subject, Subscription, merge } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 import { DocService } from '../doc.service';
 import { LoadingService } from '../loading.service';
 import { DocumentBase, Type } from 'jetti-middle/dist';
+
+export interface IDescedantData {
+  amount: number;
+  code: string;
+  company: string;
+  date: string;
+  deleted: false
+  description: string;
+  id: string;
+  info: string;
+  posted: true
+  type: string;
+  user: string;
+}
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,13 +43,17 @@ export class DescendantsComponent implements OnInit, OnDestroy {
   constructor(private apiService: ApiService, public router: Router, private ds: DocService, public lds: LoadingService) { }
 
   ngOnInit() {
-    this.apiService.getDescedantsObjects(this.doc.id).pipe(take(1)).subscribe(data => { this.descendantsListSub$.next(data); });
+    this.apiService.getDescedantsObjects(this.doc.id)
+      .pipe(take(1))
+      .subscribe(data => {
+        data.forEach(e => e.description = (e.description || '').replace('Operation ', ''));
+        this.descendantsListSub$.next(data);
+      });
 
     if (this.isCatalog) this._subscription$ = this.descendantsListSub$.subscribe(data => {
       this.infoText = '';
       if (data.length === 20) this.infoText = 'First 20 objects';
     });
-
   }
 
   search(searchedValue: string) {

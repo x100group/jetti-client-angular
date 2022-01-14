@@ -16,6 +16,7 @@ import { Ref, IViewModel } from 'jetti-middle/dist';
 import { FormListOrder, FormListFilter, FormListSettings, UserDefaultsSettings } from 'jetti-middle/dist';
 import { AccountRegister } from 'jetti-middle/dist';
 import { IUserSettings } from 'jetti-middle/dist/common/classes/user-settings';
+import { IDescedantData } from '../common/descendants/descendants.component';
 
 class cached<T> {
   constructor(private _data: Map<string, T>, private _defaultValue?: T) { }
@@ -353,9 +354,9 @@ export class ApiService {
     return (this.http.get(query) as Observable<IViewModel>);
   }
 
-  getDescedantsObjects(id: Ref): Observable<any[]> {
+  getDescedantsObjects(id: Ref): Observable<IDescedantData[]> {
     const query = `${environment.api}getDescedantsObjects/${id}`;
-    return (this.http.get(query) as Observable<any[]>);
+    return (this.http.get(query) as Observable<IDescedantData[]>);
   }
 
   SubSystemsMenu() {

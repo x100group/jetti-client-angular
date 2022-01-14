@@ -1,18 +1,18 @@
 <h2 *ngIf="infoText" style="color: red; font-style: italic; font-weight: bold;">{{this.infoText}}</h2>
 <p-table #table [value]="descendantsListSub$ | async" columnResizeMode="expand" [(selection)]="selection"
-  selectionMode="single" dataKey="id">
+  selectionMode="single" dataKey="id" [resizableColumns]="true">
   <ng-template pTemplate="header">
     <tr>
       <th [ngStyle]="{'width': '30px', 'text-align': 'center'}"></th>
-      <th style="text-align: center; width: 450px">Document
+      <th pReorderableColumn pResizableColumn style="text-align: center; width: 500px">Document
       </th>
-      <th style="text-align: center; width: 250px">Company
+      <th pReorderableColumn pResizableColumn style="text-align: center; width: 250px">Company
       </th>
-      <th style="text-align: center; width: 100px">Amount
+      <th pReorderableColumn pResizableColumn style="text-align: center; width: 100px">Amount
       </th>
-      <th style="text-align: center; width: 150px">User
+      <th pReorderableColumn pResizableColumn style="text-align: center; width: 150px">User
       </th>
-      <th style="width: 100%">Info
+      <th pReorderableColumn pResizableColumn style="width: 100%">Info
       </th>
     </tr>
   </ng-template>
