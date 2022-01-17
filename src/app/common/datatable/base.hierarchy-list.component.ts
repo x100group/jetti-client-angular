@@ -597,7 +597,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private getCurrentParent() {
     const result = { parent: null };
     if (this.treeNodesVisible && this.selectedData)
-      result.parent = this.selectedData.isfolder ? this.selectedData.id : this.selectedData.parent.id;
+      result.parent = (this.selectedData.isfolder || Object.keys(this.selectedData).length === 1) ?
+        this.selectedData.id :
+        this.selectedData.parent.id;
     return result;
   }
 
