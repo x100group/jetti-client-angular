@@ -172,8 +172,9 @@ export class AutocompleteComponent implements ControlValueAccessor, Validator, O
       this.input.inputEL.nativeElement.focus();
     }
   })
-  onBlur = (event: Event) => {
-    //   if (this.value && this.suggest.value && (this.value.id !== this.suggest.value.id)) { this.value = this.value; }
+
+  onClear = (event: Event) => {
+    if (this.suggest.value === '') this.handleReset(event);
   }
 
   searchComplete(row: ISuggest) {

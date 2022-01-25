@@ -144,7 +144,14 @@ export function getFormGroup(schema: { [x: string]: any }, model: { [x: string]:
   };
 
   processRecursive(schema, controls);
-
+  const companyControl = controls.find(e =>
+    e.controlType === 'autocomplete'
+    && e.type === 'Catalog.Company'
+    && !e.required
+    && !e.disabled
+    && (e.order || 1) > 0
+    && !e.hidden);
+  if (companyControl) companyControl.required = true;
   const formGroup = toFormGroup(controls);
 
   // Create formArray's for table parts of document
@@ -165,6 +172,10 @@ export function getFormGroup(schema: { [x: string]: any }, model: { [x: string]:
       formArray['sample'] = cloneFormGroup(formArray.at(0) as FormGroup);
       formArray.removeAt(0);
     });
+
+  if (!model.timestamp)
+    model.company = { id: null, code: null, value: null, type: 'Catalog.Company' };
+
   formGroup.patchValue(model, patchOptionsNoEvents);
   formGroup['schema'] = schema;
 
