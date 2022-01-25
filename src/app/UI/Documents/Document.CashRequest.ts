@@ -19,8 +19,16 @@ export class DocumentCashRequestComponent extends _baseDocFormComponent implemen
   get readonlyMode() { return !this.isSuperUser && !this.isNew && ['PREPARED', 'MODIFY'].indexOf(this.form.get('Status').value) === -1; }
   get Operation(): string { return this.form.get('Operation').value || ''; }
   get CashKind(): string { return this.form.get('CashKind').value || 'ANY'; }
-  // tslint:disable-next-line: max-line-length
-  get useItemsTable(): boolean { return ['Оплата поставщику', 'Оплата ДС в другую организацию', 'Прочий расход ДС'].includes(this.Operation); }
+  get isSalaryOperation(): boolean {
+    return ['Выплата заработной платы',
+      'Выплата заработной платы без ведомости',
+      'Выплата ЗП для самозанятых'].includes(this.Operation);
+  }
+  get useItemsTable(): boolean {
+    return ['Оплата поставщику',
+      'Оплата ДС в другую организацию',
+      'Прочий расход ДС'].includes(this.Operation);
+  }
 
   constructor(public router: Router, public route: ActivatedRoute, public lds: LoadingService, public auth: AuthService,
     public cd: ChangeDetectorRef, public ds: DocService, public tabStore: TabsStore,
