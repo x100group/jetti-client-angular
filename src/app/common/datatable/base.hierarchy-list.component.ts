@@ -7,7 +7,7 @@ import { merge, Observable, Subject, Subscription, of, BehaviorSubject, combineL
 import { debounceTime, filter, map, take } from 'rxjs/operators';
 import { v1, v4 } from 'uuid';
 import { calendarLocale, dateFormat } from '../../primeNG.module';
-import { scrollIntoViewIfNeeded } from '../utils';
+import { copyToClipboard, scrollIntoViewIfNeeded } from '../utils';
 import { UserSettingsService } from './../../auth/settings/user.settings.service';
 import { ApiDataSource } from './../../common/datatable/api.datasource.v2';
 import { DocService } from './../../common/doc.service';
@@ -82,6 +82,17 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return this.treeNodesVisible ?
       (this.selectedNode ? this.selectedNode.data : null) :
       (this.selection && this.selection.length ? this.selection[0] : null);
+  }
+
+  get useSelectedTotal() {
+    return !!(this.columns || []).find(e => e.field === 'Amount');
+  }
+
+  get selectedTotal() {
+    const sum = (this.selection || [])
+      .map(e => (this.dataSource.renderedDataList.find(l => l.id === e.id) || { Amount: 0 }).Amount)
+      .reduce((a, b) => a + b) || 0;
+    return (sum || 0);
   }
 
   get isDeletedHidden() { return !!this.activeFilters.find(e => e.left === 'deleted'); }
@@ -560,7 +571,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
     const selectAllCommand = {
       label: 'Select (All)', icon: 'fa fa-check-square',
-      command: (event) => this.selection = this.dataSource.renderedDataList
+      command: (event) => this.selection = [...this.dataSource.renderedDataList]
     };
 
     const clearAllFilters = {
@@ -778,6 +789,10 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.settings.columns.order = columns.map(e => e.field);
     this.usApplyColumnsProps();
     this._columnsSettingsState$.next({ ...this._columnsSettingsState$.value, isModify: true, apply: false });
+  }
+
+  public copyToClipboardSelectedTotal() {
+    copyToClipboard(this.selectedTotal);
   }
 
   private onFilterSettingsStateChanged(state: IUserSettingsState) {

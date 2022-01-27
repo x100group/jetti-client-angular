@@ -98,8 +98,8 @@
                     (ngModelChange)="update(rowData, $event,  rowData.filter.center)" [showClear]="true"
                     >
                   </p-dropdown> -->
-                  <j-ng-select ngDefaultControl class="ng-select-container-flexible" [options]="rowData.value" [type]="rowData.type"
-                    [id]="rowData.field" [selectedItemsSimple]="rowData.filter.right"
+                  <j-ng-select ngDefaultControl class="ng-select-container-flexible" [options]="rowData.value"
+                    [type]="rowData.type" [id]="rowData.field" [selectedItemsSimple]="rowData.filter.right"
                     (select)="update(rowData, $event,  rowData.filter.center)">
                   </j-ng-select>
                 </div>
@@ -188,6 +188,11 @@
           *ngIf="selectedData"></button>
       </div>
       <div *ngIf="!this.isRelationList" class="ui-toolbar-group-right">
+        <span *ngIf="useSelectedTotal">
+          <button id="total" class="ui-button-secondary"  pButton type="button"
+            [label]="selectedTotal | number:'1.2-4'" (click)="copyToClipboardSelectedTotal()"></button>
+          <i class="pi pi-bars"></i>
+        </span>
         <button id="showDeleted" [icon]="this.isDeletedHidden ? 'fas fa-eye-slash' : 'fas fa-eye'" type="text" pButton
           type="button" (click)="this.isDeletedHidden = !this.isDeletedHidden"
           [ngClass]="this.isDeletedHidden ? 'ui-button-success' : 'ui-button-danger'"

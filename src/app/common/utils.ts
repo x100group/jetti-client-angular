@@ -34,6 +34,19 @@ export function isEqualObjects(object1: Object, object2: Object): boolean {
   return true;
 }
 
+export const copyToClipboard = (str: string) => {
+  const el = document.createElement('textarea');
+  el.value = str;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  el.select();
+  // tslint:disable-next-line: deprecation
+  document.execCommand('copy');
+  document.body.removeChild(el);
+};
+
 // export function newGUID() {
 //   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
 //     const r = Math.random() * 16 | 0;
