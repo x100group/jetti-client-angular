@@ -47,6 +47,8 @@ export const copyToClipboard = (str: string) => {
   document.body.removeChild(el);
 };
 
+export const numberToMoneyString = (number: number) => number.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$& ').replace('.', ',');
+
 // export function newGUID() {
 //   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
 //     const r = Math.random() * 16 | 0;

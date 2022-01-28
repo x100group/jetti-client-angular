@@ -189,8 +189,8 @@
       </div>
       <div *ngIf="!this.isRelationList" class="ui-toolbar-group-right">
         <span *ngIf="useSelectedTotal">
-          <button id="total" class="ui-button-secondary"  pButton type="button"
-            [label]="selectedTotal | number:'1.2-4'" (click)="copyToClipboardSelectedTotal()"></button>
+          <button id="total" class="ui-button-secondary" pButton type="button" [label]="selectedTotal"
+            (click)="copyToClipboardSelectedTotal()"></button>
           <i class="pi pi-bars"></i>
         </span>
         <button id="showDeleted" [icon]="this.isDeletedHidden ? 'fas fa-eye-slash' : 'fas fa-eye'" type="text" pButton

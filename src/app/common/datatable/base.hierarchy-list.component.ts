@@ -7,7 +7,7 @@ import { merge, Observable, Subject, Subscription, of, BehaviorSubject, combineL
 import { debounceTime, filter, map, take } from 'rxjs/operators';
 import { v1, v4 } from 'uuid';
 import { calendarLocale, dateFormat } from '../../primeNG.module';
-import { copyToClipboard, scrollIntoViewIfNeeded } from '../utils';
+import { copyToClipboard, numberToMoneyString, scrollIntoViewIfNeeded } from '../utils';
 import { UserSettingsService } from './../../auth/settings/user.settings.service';
 import { ApiDataSource } from './../../common/datatable/api.datasource.v2';
 import { DocService } from './../../common/doc.service';
@@ -85,14 +85,27 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   get useSelectedTotal() {
-    return !!(this.columns || []).find(e => e.field === 'Amount');
+    return (this.selection || []).length &&
+      !!(this.columns || []).find(e => e.field === 'Amount') &&
+      !!(this.columns || []).find(e => e.field === 'currency');
   }
 
   get selectedTotal() {
-    const sum = (this.selection || [])
-      .map(e => (this.dataSource.renderedDataList.find(l => l.id === e.id) || { Amount: 0 }).Amount)
-      .reduce((a, b) => a + b) || 0;
-    return (sum || 0);
+    const data = this.dataSource.renderedDataList;
+    if (!(data || []).length) return numberToMoneyString(0);
+
+    const selected = (this.selection || [])
+      .map(e => {
+        const r = data.find(l => l.id === e.id);
+        return ({ currency: r.currency.id, amount: r.Amount });
+      });
+
+    const currency = selected[0].currency;
+    if (selected.some(e => e.currency !== currency))
+      return 'multicurrency selection';
+    const sum = selected.reduce((a, b) => a + b.amount, 0);
+
+    return numberToMoneyString(sum || 0);
   }
 
   get isDeletedHidden() { return !!this.activeFilters.find(e => e.left === 'deleted'); }
