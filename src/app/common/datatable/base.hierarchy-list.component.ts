@@ -97,9 +97,11 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     const selected = (this.selection || [])
       .map(e => {
         const r = data.find(l => l.id === e.id);
-        return ({ currency: r.currency.id, amount: r.Amount });
-      });
+        return r && r.currency ? ({ currency: r.currency.id, amount: r.Amount }) : undefined;
+      })
+      .filter(r => !!r);
 
+    if (!selected.length) return numberToMoneyString(0);
     const currency = selected[0].currency;
     if (selected.some(e => e.currency !== currency))
       return 'multicurrency selection';
