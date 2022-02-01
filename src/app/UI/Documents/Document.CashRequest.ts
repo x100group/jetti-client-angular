@@ -70,7 +70,12 @@ export class DocumentCashRequestComponent extends _baseDocFormComponent implemen
     // tslint:disable
     if (operation === 'Выплата заработной платы') this.form.get('PayRollKind').enable({ emitEvent: false }); else this.form.get('PayRollKind').disable({ emitEvent: false });
 
-    if (operation === 'Оплата ДС в другую организацию') this.form.get('CashOrBankIn').enable({ emitEvent: false }); else this.form.get('CashOrBankIn').disable({ emitEvent: false });
+    const CashOrBankIn = this.form.get('CashOrBankIn');
+
+    if (`Оплата ДС в другую организацию, Внутренний займ`.includes(operation))
+      CashOrBankIn.enable({ emitEvent: false });
+    else CashOrBankIn.disable({ emitEvent: false });
+
     if (operation === 'Перечисление налогов и взносов') this.form.get('BalanceAnalytics').enable({ emitEvent: false }); else this.form.get('BalanceAnalytics').disable({ emitEvent: false });
 
     if (`Выплата заработной платы
