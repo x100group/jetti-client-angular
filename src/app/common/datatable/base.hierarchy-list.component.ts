@@ -87,17 +87,19 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   get useSelectedTotal() {
     return (this.selection || []).length &&
       !!(this.columns || []).find(e => e.field === 'Amount') &&
-      !!(this.columns || []).find(e => e.field === 'currency');
+      !!(this.columns || []).find(e => e.field === 'currency' || e.field === 'сurrency');
   }
 
   get selectedTotal() {
     const data = this.dataSource.renderedDataList;
     if (!(data || []).length) return numberToMoneyString(0);
 
+    const currencyColumn = this.columns.find(e => e.field === 'currency') ? 'currency' : 'сurrency';
+
     const selected = (this.selection || [])
       .map(e => {
         const r = data.find(l => l.id === e.id);
-        return r && r.currency ? ({ currency: r.currency.id, amount: r.Amount }) : undefined;
+        return r && r[currencyColumn] ? ({ currency: r[currencyColumn].id, amount: r.Amount }) : undefined;
       })
       .filter(r => !!r);
 
