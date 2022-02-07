@@ -107,6 +107,10 @@ export class AuthService {
     return this.isRoleAvailable('Cash request admin');
   }
 
+  public isRoleAvailableCashRequestCommentEditor(): boolean {
+    return this.isRoleAvailable('Cash request comment editor');
+  }
+
   public isRoleAvailableTester(): boolean {
     return true; // this.isRoleAvailable('New features tester');
   }

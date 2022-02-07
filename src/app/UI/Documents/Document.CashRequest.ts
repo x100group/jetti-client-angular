@@ -17,6 +17,7 @@ import { DocumentBase } from 'jetti-middle/dist';
 })
 export class DocumentCashRequestComponent extends _baseDocFormComponent implements OnInit, OnDestroy, IFormEventsModel {
   get readonlyMode() { return !this.isSuperUser && !this.isNew && ['PREPARED', 'MODIFY'].indexOf(this.form.get('Status').value) === -1; }
+  get isAvaliblePost() { return (!this.readonlyMode || this.isCommentEditorRule) && !this.isDeleted; }
   get Operation(): string { return this.form.get('Operation').value || ''; }
   get CashKind(): string { return this.form.get('CashKind').value || 'ANY'; }
   get isSalaryOperation(): boolean {
@@ -37,6 +38,7 @@ export class DocumentCashRequestComponent extends _baseDocFormComponent implemen
   }
 
   isSuperUser = false;
+  isCommentEditorRule = false;
   canModifyProcess = false;
   logic_USECASHREQUESTAPPROVING = false;
 
@@ -102,14 +104,15 @@ export class DocumentCashRequestComponent extends _baseDocFormComponent implemen
     if (`Оплата по кредитам и займам полученным
     Выдача займа контрагенту`.indexOf(operation) !== -1) this.form.get('Loan').enable({ emitEvent: false }); else this.form.get('Loan').disable({ emitEvent: false });
 
-    `TaxPaymentCode
+    if (Object.keys(this.vk).length) {
+      `TaxPaymentCode
     TaxOfficeCode2
     TaxPayerStatus
     TaxBasisPayment
     TaxPaymentPeriod`.split('\n').forEach(el => { this.vk[el.trim()].required = false });
-
-    this.vk['CashOrBank'].required = operation === 'Выплата заработной платы';
-    this.vk['SalaryAnalitics'].required = operation.includes('Выплата заработной платы');
+      this.vk['CashOrBank'].required = operation === 'Выплата заработной платы';
+      this.vk['SalaryAnalitics'].required = operation.includes('Выплата заработной платы');
+    }
 
     this.form.markAsTouched();
 
@@ -188,6 +191,7 @@ export class DocumentCashRequestComponent extends _baseDocFormComponent implemen
   async onOpen() {
 
     this.isSuperUser = this.auth.isRoleAvailableCashRequestAdmin();
+    this.isCommentEditorRule = this.auth.isRoleAvailableCashRequestCommentEditor();
     this.logic_USECASHREQUESTAPPROVING = this.auth.LOGIC_USECASHREQUESTAPPROVING();
     this.canModifyProcess = this.isSuperUser && this.logic_USECASHREQUESTAPPROVING;
     if (this.logic_USECASHREQUESTAPPROVING && !this.canModifyProcess && this.getValue('Status') === 'MODIFY') {
