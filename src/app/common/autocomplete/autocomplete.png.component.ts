@@ -78,6 +78,7 @@ export class AutocompleteComponent implements ControlValueAccessor, Validator, O
   get EMPTY() { return { id: null, code: null, type: this.type, value: null }; }
   get isEMPTY() { return this.isComplexControl && !(this.value && this.value.value); }
   get isCatalogParent() { return this.type.startsWith('Catalog.') && this.id === 'parent'; }
+  get isDocumentParent() { return this.id === 'parent' && (Type.isDocument(this.type) || this.type === 'Types.Document'); }
 
   private _value: IComplexObject;
   @Input() set value(obj) {
@@ -203,7 +204,7 @@ export class AutocompleteComponent implements ControlValueAccessor, Validator, O
       if (this.storageType === 'elements') { result.filter.push({ left: 'isfolder', center: '=', right: false }); }
       if (this.storageType === 'all') { result.filter.push({ left: 'isfolder', center: '=', right: undefined }); }
     }
-    if (!result.filter.find(e => e.left === 'company')) {
+    if (!result.filter.find(e => e.left === 'company') && !this.isDocumentParent) {
       let company;
       if (Type.isDocument(this.type)) {
         const doc = this.formControl && this.formControl.root.value;
@@ -216,7 +217,6 @@ export class AutocompleteComponent implements ControlValueAccessor, Validator, O
     }
 
     result.filter = this.getFilterFromModule(result.filter);
-    // result.filter = result.filter.map(e => ({ ...e, fixed: ['company', 'department'].includes(e.left.toLocaleLowerCase()) }));
 
     return result;
   }
