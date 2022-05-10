@@ -147,7 +147,7 @@ export class ApiService {
   }
 
   getSuggests(docType: string, filter: string, filters: FormListFilter[]): Observable<ISuggest[]> {
-    const query = `${environment.api}suggest/${docType}?filter=${filter}`;
+    const query = `${environment.api}suggest/${docType}?filter=${filter.startsWith('%') ? filter.replace('%', '%25') : filter}`;
     return this.http.post<ISuggest[]>(query, { filters });
   }
 
