@@ -85,8 +85,8 @@
                   <p-calendar *ngIf="rowData.filter.center !== 'beetwen'" selectionMode="single" showButtonBar="true"
                     [ngModel]="rowData.filter.right" readonlyInput="true" [appendTo]="'body'" [locale]="locale"
                     (ngModelChange)="update(rowData, $event,  rowData.filter.center)" [dateFormat]="dateFormat"
-                    [monthNavigator]="true" [yearNavigator]="true" yearRange="2010:2030" showTime="true"
-                    showSeconds="true">
+                    [monthNavigator]="true" [yearNavigator]="true" yearRange="2010:2030"
+                    [showTime]="rowData.filter.center === '='" [showSeconds]="rowData.filter.center === '='">
                   </p-calendar>
                 </div>
                 <div *ngSwitchCase="'string'">
@@ -276,8 +276,8 @@
                 <p-calendar *ngIf="column.filter.center !== 'beetwen'" selectionMode="single" showButtonBar="true"
                   [ngModel]="column.filter.right" readonlyInput="true" [appendTo]="'body'" [locale]="locale"
                   (ngModelChange)="update(column, $event,  column.filter.center)" [dateFormat]="dateFormat"
-                  [monthNavigator]="true" [yearNavigator]="true" yearRange="2010:2030" showTime="true"
-                  showSeconds="true">
+                  [monthNavigator]="true" [yearNavigator]="true" yearRange="2010:2030"
+                  [showTime]="column.filter.center === '='" [showSeconds]="column.filter.center === '='">
                 </p-calendar>
               </div>
               <div *ngSwitchCase="'string'">
@@ -419,8 +419,8 @@
                 <p-calendar *ngIf="column.filter.center !== 'beetwen'" selectionMode="single" showButtonBar="true"
                   [ngModel]="column.filter.right" readonlyInput="true" [appendTo]="'body'" [locale]="locale"
                   (ngModelChange)="update(column, $event,  column.filter.center)" [dateFormat]="dateFormat"
-                  [monthNavigator]="true" [yearNavigator]="true" yearRange="2010:2030" showTime="true"
-                  showSeconds="true">
+                  [monthNavigator]="true" [yearNavigator]="true" yearRange="2010:2030"
+                  [showTime]="column.filter.center === '='" [showSeconds]="column.filter.center === '='">
                 </p-calendar>
               </div>
               <div *ngSwitchCase="'string'">

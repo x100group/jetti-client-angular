@@ -471,10 +471,18 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
         newF.isActive = !!(newF.right && newF.right.id);
     } else if (['in', 'not in'].includes(center)) {
       newF.isActive = Array.isArray(newF.right) && newF.right.length > 0;
-    } else if (['date', 'datetime'].includes(column.type) && newF.right && center === 'beetwen') {
-      if ((Array.isArray(newF.right) && (!newF.right[0] || !newF.right[1]))) return;
-      newF.right[1].setHours(23, 59, 59, 999);
-      newF.isActive = !!newF.right;
+    } else if (['date', 'datetime'].includes(column.type)) {
+      newF.isActive = false;
+      if (center === 'beetwen') {
+        newF.isActive = Array.isArray(newF.right) && newF.right.length === 2 && newF.right[0] instanceof Date && newF.right[1] instanceof Date;
+        if (newF.isActive) {
+          newF.right[0] instanceof Date && newF.right[0].setHours(0, 0, 0, 0);
+          newF.right[1] instanceof Date && newF.right[1].setHours(23, 59, 59, 999);
+        }
+      } else if (newF.right instanceof Date) {
+        newF.isActive = true;
+        if (center != '=') newF.right.setHours(0, 0, 0, 0);
+      }
     } else {
       newF.isActive = !!newF.right;
     }
@@ -1049,12 +1057,33 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       this.uss.loadSettings(this.usGetSettingsType(), this._userEmail, '', defaults).then(
         savedSettings => {
           const fSet = savedSettings.filter(e => e.kind === 'filter');
-          fSet.filter(e => !!e.id).forEach(e => e.settings.filter.forEach(f => f.isActive = true));
+          fSet
+            .filter(e => !!e.id)
+            .forEach(e => e.settings.filter.forEach(f => f.isActive = true));
+          fSet.map(e => {
+            e.settings.filter = this._usMergeSettings(e.settings.filter, this._usDefaultFilterGet());
+            return e;
+          })
           stateFromSettings(savedSettings.filter(e => e.kind === 'columns'));
           stateFromSettings(fSet);
         }
       );
     }
+  }
+
+  private _usMergeSettings(destination: FormListFilter[], source: FormListFilter[]) {
+    const allFields = [...new Set([...(source || []).map(e => e.left), ...(destination || []).map(e => e.left)])];
+    return allFields.map(f => destination.find(e => e.left === f && e.isActive) || source.find(e => e.left === f)).filter(e => !!e);
+  }
+
+  private _usDefaultFilterGet(): FormListFilter[] {
+    if (this.isRelationList || !Type.isDocument(this.type)) return [];
+    const day = 24 * 60 * 60 * 1000;
+    const defaultPeriond = [
+      new Date(Date.now() - 90 * day),
+      new Date(Date.now() + 10 * day),
+    ];
+    return [{ left: 'date', center: 'beetwen', right: defaultPeriond, isActive: true }];
   }
 
   private usGetDefaultSettings(): IUserSettings[] {
