@@ -7,7 +7,7 @@ import { merge, Observable, Subject, Subscription, of, BehaviorSubject, combineL
 import { debounceTime, filter, map, take } from 'rxjs/operators';
 import { v1, v4 } from 'uuid';
 import { calendarLocale, dateFormat } from '../../primeNG.module';
-import { copyToClipboard, numberToMoneyString, scrollIntoViewIfNeeded } from '../utils';
+import { addMonths, copyToClipboard, numberToMoneyString, scrollIntoViewIfNeeded } from '../utils';
 import { UserSettingsService } from './../../auth/settings/user.settings.service';
 import { ApiDataSource } from './../../common/datatable/api.datasource.v2';
 import { DocService } from './../../common/doc.service';
@@ -1078,11 +1078,10 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   private _usDefaultFilterGet(): FormListFilter[] {
     if (this.isRelationList || !Type.isDocument(this.type)) return [];
-    const day = 24 * 60 * 60 * 1000;
-    const defaultPeriond = [
-      new Date(Date.now() - 90 * day),
-      new Date(Date.now() + 10 * day),
-    ];
+    const current = new Date;
+    const begin = new Date(new Date((addMonths(new Date, -3).setDate(1))).setHours(0, 0, 0, 0));
+    const end = new Date(new Date(current.getFullYear(), current.getMonth() + 1, 0).setHours(23, 59, 59, 999));
+    const defaultPeriond = [begin, end];
     return [{ left: 'date', center: 'beetwen', right: defaultPeriond, isActive: true }];
   }
 

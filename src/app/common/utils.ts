@@ -34,6 +34,14 @@ export function isEqualObjects(object1: Object, object2: Object): boolean {
   return true;
 }
 
+export function addMonths(date: Date, months: number) {
+  const d = date.getDate();
+  date.setMonth(date.getMonth() + +months);
+  if (date.getDate() != d)
+    date.setDate(0);
+  return date;
+}
+
 export const copyToClipboard = (str: string) => {
   const el = document.createElement('textarea');
   el.value = str;
