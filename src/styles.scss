@@ -39,6 +39,10 @@ body .ui-table .ui-table-tfoot > tr > td {
   padding: 0.343em 0.343em;
 }
 
+body .ui-tabview.ui-tabview-top .ui-tabview-panels {
+  margin-top: 0px;
+}
+
 .ui-inputtext {
   padding: 0.343em 0.343em !important;
 }
