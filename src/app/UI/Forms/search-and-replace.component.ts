@@ -8,6 +8,7 @@ import { DynamicFormService, getFormGroup } from 'src/app/common/dynamic-form/dy
 import { LoadingService } from 'src/app/common/loading.service';
 import { take } from 'rxjs/operators';
 import { FormBase } from 'jetti-middle/dist';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,8 +17,9 @@ import { FormBase } from 'jetti-middle/dist';
 })
 export class SearchAndReplaceComponent extends _baseDocFormComponent implements OnInit, OnDestroy {
 
-  onlyViewMode = false;
+  readonly = false;
   header = 'Search and replace';
+  inited$ = new BehaviorSubject(false);
 
   constructor(
     public router: Router, public route: ActivatedRoute, public auth: AuthService,
@@ -32,11 +34,13 @@ export class SearchAndReplaceComponent extends _baseDocFormComponent implements 
     if (id) {
       this.ds.api.byId(id).then(val => {
         if (!val) return;
-        this.onlyViewMode = true;
+        this.readonly = true;
         this.form.get('OldValue').setValue({ id: val.id, code: val.code, type: val.type, value: val.description });
-        this.fillHeader();
-        this.ExecuteServerMethod('Search').then();
+        this.updateHeader();
+        this.executeServerMethod('search').then(_ => this.inited$.next(true));
       });
+    } else {
+      this.inited$.next(true);
     }
   }
 
@@ -44,9 +48,15 @@ export class SearchAndReplaceComponent extends _baseDocFormComponent implements 
     super.ngOnDestroy();
   }
 
-  fillHeader() {
-    const oldval = this.form.get('OldValue').value;
-    this.header = this.onlyViewMode ? `${oldval ? oldval.value : ''} used in` : `Search and replace`;
+  updateHeader() {
+    if (this.readonly) {
+      const oldval = this.form.get('OldValue').value;
+      this.header = `"${oldval.value}" используется в`;
+    }
+  }
+
+  openUsedInPage(event) {
+    this.router.navigate([event.Type, 'used', this.id]);
   }
 
   close() {
@@ -54,10 +64,11 @@ export class SearchAndReplaceComponent extends _baseDocFormComponent implements 
     super.close();
   }
 
-  async ExecuteServerMethod(methodName: string) {
+  async executeServerMethod(methodName: string) {
 
     this.ds.api.execute(this.type, methodName, this.form.getRawValue() as FormBase).pipe(take(1))
       .subscribe(value => {
+        if (this.readonly) delete value.schema.SearchResult.SearchResult.Source;
         const form = getFormGroup(value.schema, value.model, true);
         form['metadata'] = value.metadata;
         super.Next(form);

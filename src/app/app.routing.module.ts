@@ -24,15 +24,14 @@ export class TabResolver implements Resolve<FormGroup | IViewModel | null> {
   constructor(private dfs: DynamicFormService, private api: ApiService, private tabStore: TabsStore) { }
 
   public resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    const id = route.params.id || '';
-    const type = route.params.type;
-    const group = route.params.group || '';
+    const { type, id = '', group = '', used = '' } = route.params;
     if (type === 'home') return null;
     if (type.startsWith('Form.')) { return this.dfs.getFormView$(type); }
-    if (this.tabStore.state.tabs.findIndex(i => i.type === type && i.id === id && i.group === group) === -1) {
+    const tabKey = { type, id, group, used };
+    if (!this.tabStore.findTab(tabKey)) {
       return id ?
         this.dfs.getViewModel$(type, id, route.queryParams) :
-        this.api.getView(type, group);
+        this.api.getView(type, { group, used });
     }
     return null;
   }
@@ -42,6 +41,7 @@ export class TabResolver implements Resolve<FormGroup | IViewModel | null> {
 export const routes: Routes = [
   { path: ':type/:id', component: TabControllerComponent, resolve: { detail: TabResolver }, canActivate: [AuthGuardService] },
   { path: ':type', component: TabControllerComponent, resolve: { detail: TabResolver }, canActivate: [AuthGuardService] },
+  { path: ':type/used/:used', component: TabControllerComponent, resolve: { detail: TabResolver }, canActivate: [AuthGuardService] },
   { path: ':type/group/:group', component: TabControllerComponent, resolve: { detail: TabResolver }, canActivate: [AuthGuardService] },
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: '**', redirectTo: 'home' }

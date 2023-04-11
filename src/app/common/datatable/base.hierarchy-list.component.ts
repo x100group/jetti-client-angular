@@ -22,6 +22,8 @@ import {
   IUserSettings, FormListColumnProps, IUserSettingsState,
 } from 'jetti-middle';
 import { settingsKind } from 'jetti-middle/dist/common/classes/user-settings';
+import { HotkeysService } from 'src/app/services/hotkeys.service';
+import { ImageModalComponent } from 'src/app/dialog/image.dialog.component';
 // tslint:disable: deprecation
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,21 +41,15 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   constructor(public route: ActivatedRoute, public router: Router, public ds: DocService,
     public uss: UserSettingsService, public lds: LoadingService, public dss: DynamicFormService,
-    private auth: AuthService, public dialog: DialogService) { }
+    private auth: AuthService, public dialog: DialogService, private hotkey: HotkeysService) { }
 
-  private _pageSizeSubscription$: Subscription = Subscription.EMPTY;
-  private _pageSize$ = new Subject<number>();
-  private _docSubscription$: Subscription = Subscription.EMPTY;
-  private _routeSubscription$: Subscription = Subscription.EMPTY;
-  private _debonceSubscription$: Subscription = Subscription.EMPTY;
-  private _debonce$ = new Subject<FormListFilter>();
-  private _resizeSubscription$: Subscription = Subscription.EMPTY;
+  private readonly _subs: Subscription[] = [];
+
   private _columnSettingsProps = ['width', 'visibility'];
-  private _filterSettingsState$: BehaviorSubject<IUserSettingsState> = new BehaviorSubject<IUserSettingsState>({ selected: { description: 'Default' } as any });
-  private _filterSettingsStateSubscription$: Subscription = Subscription.EMPTY;
+  private _pageSize$ = new Subject<number>();
+  private _debonce$ = new Subject<FormListFilter>();
   private _columnsSettingsState$: BehaviorSubject<IUserSettingsState> = new BehaviorSubject<IUserSettingsState>({ selected: { description: 'Default' } as any });
-  private _columnsSettingsStateSubscription$: Subscription = Subscription.EMPTY;
-
+  private _filterSettingsState$: BehaviorSubject<IUserSettingsState> = new BehaviorSubject<IUserSettingsState>({ selected: { description: 'Default' } as any });
   private _isInitComplete$: BehaviorSubject<boolean> = new BehaviorSubject(this.isRelationList);
 
   isInitComplete$ = this._isInitComplete$.asObservable();
@@ -112,6 +108,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     return numberToMoneyString(sum || 0);
   }
 
+  get isFilterAvailable() { return !this.usedInId };
+
   get isDeletedHidden() { return !!this.activeFilters.find(e => e.left === 'deleted'); }
 
   set isDeletedHidden(value: boolean) {
@@ -142,16 +140,18 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private _expandedNodeId: string;
 
   group = '';
+  usedInId = '';
   columns: ColumnDef[] = [];
   selection: any[] = [];
   contextMenuSelection = [];
   ctxData = { column: '', value: undefined };
-  contexCommands: { list: MenuItem[], tree: MenuItem[] } = { list: [], tree: [] };
+  contextCommands: { list: MenuItem[], tree: MenuItem[] } = { list: [], tree: [] };
   filters: { [s: string]: FormListFilter } = {};
   multiSortMeta: SortMeta[] = [];
   dataSource: ApiDataSource;
   private _userEmail = this.auth.userEmail;
   sidebarDisplay = false;
+  url = '';
 
   treeNodes$: Observable<TreeNode[]>;
   treeNodes: TreeNode[] = [];
@@ -169,6 +169,22 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   addMenuItems: MenuItem[];
   showActiveFilters = false;
   usSettingsEditMode = false;
+
+  hotKeys = [
+    { key: 'Insert', handler: this.add, info: 'add new row' },
+    { key: 'F9', handler: this.copy, info: 'copy selected row' },
+    { key: 'F2', handler: this.open, info: 'edit selected row' },
+    { key: 'F5', handler: this.refresh, info: 'refresh data' },
+    { key: 'Delete', handler: this.delete, info: 'delete selected row' },
+    { key: 'ctrl+q', handler: this.clearAllFilters, info: 'disable all filters' },
+    { key: 'ctrl+a', handler: this.selectAll, info: 'select all rows' },
+    { key: 'ctrl+ArrowRight', handler: this.next, info: 'move to next tab' },
+    { key: 'ctrl+ArrowLeft', handler: this.prev, info: 'move to previous tab' },
+    { key: 'ctrl+ArrowUp', handler: this.first, info: 'move to first tab' },
+    { key: 'ctrl+ArrowDown', handler: this.last, info: 'move to last tab' },
+  ];
+
+  // create beauty dialog to showing hotkeys, use prime NG dialog service. 
 
   async ngOnInit() {
 
@@ -190,19 +206,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this.setSortOrder();
     this.prepareDataSource();
     this.setContextMenu();
-
-    this._filterSettingsStateSubscription$ = this._filterSettingsState$
-      .pipe(filter(e => e.apply && !this.isRelationList)).subscribe(e => this.onFilterSettingsStateChanged(e));
-    this._columnsSettingsStateSubscription$ = this._columnsSettingsState$
-
-      .pipe(filter(e => e.apply && !this.isRelationList)).subscribe(e => this.onColumnsSettingsStateChanged(e));
-
-    this._docSubscription$ = merge(...[
-      this.ds.save$, this.ds.delete$, this.ds.saveClose$, this.ds.goto$, this.ds.post$, this.ds.unpost$]).pipe(
-        filter(doc => doc
-          && doc.type === this.type
-          && !!(!this.group || !doc['Group'] || this.group === doc['Group']['id'])))
-      .subscribe(doc => this.docSubscriptionHandler(doc));
+    this.subscribe();
+    this.usLoad();
+    this._saveWindowHeigh();
 
     this.treeNodes$ = this.dataSource.result$
       .pipe(filter(_ => this.treeNodesVisible))
@@ -214,27 +220,42 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
         return this.treeNodes;
       }));
 
-    // обработка команды найти в списке
-    this._routeSubscription$ = this.route.params.pipe(
-      filter(params => params.type === this.type && params.group === this.group && this.route.snapshot.queryParams.goto))
-      .subscribe(params => this.routeSubscruptionHandler());
-
-    this._resizeSubscription$ = fromEvent(window, 'resize')
-      .pipe(filter(_ => window.outerHeight !== this._windowHeight))
-      .subscribe(_ => {
-        this._saveWindowHeigh();
-        this._pageSize$.next(this.getPageSize());
-      });
-
-    this._pageSizeSubscription$ = combineLatest([this._pageSize$.pipe(debounceTime(50)), this.isInitComplete$])
-      .pipe(filter(latest => !!latest[1] || this.isRelationList))
-      .subscribe(latest => this.pageSizeSubscriptionHandler(latest[0]));
-
-    this._debonceSubscription$ = this._debonce$.pipe(debounceTime(1000))
-      .subscribe(event => this._update(event));
-    this.usLoad();
-    this._saveWindowHeigh();
     if (this.isRelationList) this.last();
+  }
+
+  private subscribe() {
+    this._subs.push(
+      !this.isRelationList && this.hotkey.hotKeyEvent$
+        .pipe(
+          filter(e => e.activeUrl === this.url && this.hotKeys.some(h => h.key === e.key)),
+        )
+        .subscribe(({ key }) => this.hotKeys.find(h => h.key === key).handler.apply(this)),
+      this._filterSettingsState$
+        .pipe(filter(e => e.apply && !this.isRelationList)).subscribe(e => this.onFilterSettingsStateChanged(e)),
+      this._columnsSettingsState$
+        .pipe(filter(e => e.apply && !this.isRelationList)).subscribe(e => this.onColumnsSettingsStateChanged(e)),
+      merge(...[
+        this.ds.save$, this.ds.delete$, this.ds.saveClose$, this.ds.goto$, this.ds.post$, this.ds.unpost$]).pipe(
+          filter(doc => doc
+            && doc.type === this.type
+            && !!(!this.group || !doc['Group'] || this.group === doc['Group']['id'])))
+        .subscribe(doc => this.docSubscriptionHandler(doc)),
+      // обработка команды найти в списке
+      this.route.params.pipe(
+        filter(params => !this.usedInId && params.type === this.type && params.group === this.group && this.route.snapshot.queryParams.goto))
+        .subscribe(params => this.routeSubscruptionHandler()),
+      fromEvent(window, 'resize')
+        .pipe(filter(_ => window.outerHeight !== this._windowHeight))
+        .subscribe(_ => {
+          this._saveWindowHeigh();
+          this._pageSize$.next(this.getPageSize());
+        }),
+      combineLatest([this._pageSize$.pipe(debounceTime(50)), this.isInitComplete$])
+        .pipe(filter(latest => !!latest[1] || this.isRelationList))
+        .subscribe(latest => this.pageSizeSubscriptionHandler(latest[0])),
+      this._debonce$.pipe(debounceTime(1000))
+        .subscribe(event => this._update(event))
+    );
   }
 
   private _saveWindowHeigh() {
@@ -244,10 +265,12 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private readRouteParams(route: ActivatedRoute) {
     if (!this.type) this.type = route.snapshot.params.type;
     if (!this.group) this.group = route.snapshot.params.group;
+    this.usedInId = route.snapshot.params.used;
     if (route.snapshot.queryParams.goto) {
       this.initNodes = true;
       this.id = route.snapshot.queryParams.goto;
     }
+    this.url = this.router.url;
   }
 
   private _initColumns() {
@@ -256,7 +279,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     if (!this.isRelationList) this.settings.filter.push({ left: 'deleted', isActive: true, center: '=', right: false });
     this.columns = buildColumnDef(this.data.schema, this.settings);
     this.hierarchy = this.data.metadata.hierarchy === 'folders';
-    this.treeNodesVisible = this.hierarchy && !this._filtersWithoutDeleted(this.settings.filter).length;
+    this.treeNodesVisible = !this.usedInId && this.hierarchy && !this._filtersWithoutDeleted(this.settings.filter).length;
     if (this.hierarchy) {
       const descriptionColumn = this.columns.find(c => c.field === 'description');
       if (descriptionColumn)
@@ -283,7 +306,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private _initDataSource() {
-    this.dataSource = new ApiDataSource(this.ds.api, this.type, this.pageSize, true);
+    this.dataSource = new ApiDataSource(this.ds.api, this.type, this.pageSize, true, this.usedInId);
     this.dataSource.id = this.id;
     this.dataSource.listOptions.withHierarchy = this.treeNodesVisible;
   }
@@ -498,6 +521,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     if (!this._isInitComplete$.value) return;
     this.multiSortMeta = event.multiSortMeta;
     this.prepareDataSource();
+    if (this.usedInId) this.clearAllFilters()
     if (this.id) this.dataSource.sort();
     else this.isCatalog ? this.first() : this.last();
   }
@@ -564,7 +588,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       order: (multiSortMeta || []).map(el => <FormListOrder>({ field: el.field, order: el.order === -1 ? 'desc' : 'asc' }))
     };
     const treeNodesVisibleBefore = this.treeNodesVisible;
-    this.treeNodesVisible = this._presentation !== 'List' && this.hierarchy && !this._filtersWithoutDeleted(this.activeFilters).length;
+    this.treeNodesVisible = !this.usedInId && this._presentation !== 'List' && this.hierarchy && !this._filtersWithoutDeleted(this.activeFilters).length;
     this.dataSource.listOptions.withHierarchy = this.treeNodesVisible;
     if (treeNodesVisibleBefore !== this.treeNodesVisible) this.onTreeNodesVisibleChange();
   }
@@ -589,30 +613,35 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   private setContextMenu() {
 
-    const qFilterCommand = {
-      label: 'Quick filter', icon: 'pi pi-search',
-      command: (event) => this.update(this.getColumn(this.ctxData.column), this.ctxData.value, '=')
-    };
+    const commands = [];
 
-    const selectAllCommand = {
+    commands.push({
       label: 'Select (All)', icon: 'fa fa-check-square',
       command: (event) => this.selection = [...this.dataSource.renderedDataList]
-    };
+    });
 
-    const clearAllFilters = {
-      label: 'Clear all filters', icon: 'far fa-trash-alt',
-      command: (event) => this.clearAllFilters()
-    };
+    if (this.isFilterAvailable) {
 
-    this.contexCommands.tree = [
-      qFilterCommand,
-      clearAllFilters,
+      commands.push(
+        {
+          label: 'Quick filter', icon: 'pi pi-search',
+          command: (event) => this.update(this.getColumn(this.ctxData.column), this.ctxData.value, '=')
+        },
+        {
+          label: 'Clear all filters', icon: 'far fa-trash-alt',
+          command: (event) => this.clearAllFilters()
+        }
+      )
+    }
+
+    this.contextCommands.tree = [
+      ...commands,
       ...(this.data.metadata.copyTo || []).map(el => {
         const { label, icon } = el;
         return <MenuItem>{ label, icon, command: (event) => this.copyTo(el.type) };
       })];
 
-    this.contexCommands.list = [selectAllCommand, ...this.contexCommands.tree];
+    this.contextCommands.list = [...this.contextCommands.tree];
   }
 
   clearAllFilters() {
@@ -647,8 +676,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   copy() {
-    this.router.navigate([this.type, v1().toUpperCase()],
-      { queryParams: { copy: this.selectedData.id } });
+    if (this.selectedData.id)
+      this.router.navigate([this.type, v1().toUpperCase()],
+        { queryParams: { copy: this.selectedData.id } });
   }
 
   copyTo(type: string) {
@@ -665,6 +695,31 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   delete() {
     if (this.treeNodesVisible && this.selectedNode) this.ds.delete(this.selectedNode.key);
     else this.selection.forEach(el => this.ds.delete(el.id));
+  }
+
+  selectAll() {
+    if (this.treeNodesVisible) return;
+    this.selection = [...this.dataSource.renderedDataList];
+    this.tbl.reset();
+  }
+
+  toggleSettings() {
+    this.sidebarDisplay = !this.sidebarDisplay;
+  }
+
+  showHotkeys() {
+    const ref = this.dialog.open(ImageModalComponent, {
+      header: 'Hotkeys',
+      baseZIndex: 10000,
+      closeOnEscape: true,
+      dismissableMask: true,
+      showHeader: false,
+      data: this.hotKeys.map(e => ({ ...e, key: e.key.toUpperCase().replace('ARROW', '') }))
+    });
+
+    ref.onClose.subscribe(result => {
+      console.log('Dialog closed with result:', result);
+    });
   }
 
   async post(mode = 'post') {
@@ -785,8 +840,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   refresh(id: string) {
-    this.listenRefresh(id);
-    this.dataSource.refresh(id);
+    this.listenRefresh(id || this.id);
+    this.dataSource.refresh(id || this.id);
   }
   goto(id: string) {
     this.listenRefresh(id);
@@ -1077,7 +1132,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private _usDefaultFilterGet(): FormListFilter[] {
-    if (this.isRelationList || !Type.isDocument(this.type)) return [];
+    if (this.isRelationList || !Type.isDocument(this.type) || this.usedInId) return [];
     const current = new Date;
     const begin = new Date(new Date((addMonths(new Date, -3).setDate(1))).setHours(0, 0, 0, 0));
     const end = new Date(new Date(current.getFullYear(), current.getMonth() + 1, 0).setHours(23, 59, 59, 999));
@@ -1130,13 +1185,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this._docSubscription$.unsubscribe();
-    this._routeSubscription$.unsubscribe();
-    this._debonceSubscription$.unsubscribe();
-    this._pageSizeSubscription$.unsubscribe();
-    this._resizeSubscription$.unsubscribe();
-    this._columnsSettingsStateSubscription$.unsubscribe();
-    this._filterSettingsStateSubscription$.unsubscribe();
+    this._subs.forEach(e => e.unsubscribe());
     this._debonce$.complete();
     this._pageSize$.complete();
   }

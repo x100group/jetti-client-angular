@@ -11,7 +11,8 @@ export function cloneFormGroup(formGroup: FormGroup): FormGroup {
   Object.keys(formGroup.controls).forEach(key => {
     const sourceFormControl = formGroup.controls[key] as FormControl;
     const cloneValue = typeof sourceFormControl.value === 'object'
-      && !(sourceFormControl.value instanceof Date) ?
+      && !(sourceFormControl.value instanceof Date)
+      && sourceFormControl.value !== null ?
       { ...sourceFormControl.value } : sourceFormControl.value;
     const cloneFormControl = sourceFormControl.validator ?
       new FormControl(cloneValue, { validators: sourceFormControl.validator }) :
@@ -97,6 +98,8 @@ export function getFormGroup(schema: { [x: string]: any }, model: { [x: string]:
           value = [];
           processRecursive(v[key][key] || {}, value);
           newControl = new TableDynamicControl(controlOptions);
+          if (v[key].readOnly) Object.values(value).forEach(e => e['readOnly'] = true);
+          if (v[key].hidden) Object.values(value).forEach(e => e['hidden'] = true);
           (newControl as TableDynamicControl).controls = value;
           break;
         case 'boolean':
@@ -211,10 +214,10 @@ export class DynamicFormService {
 
   constructor(public api: ApiService) { }
 
-  getViewModel$(docType: string, docID = '', queryParams: { [key: string]: any } = {}) {
-    return this.api.getViewModel(docType, docID, queryParams).pipe(
+  getViewModel$(docType: string, docId = '', params: { [key: string]: any } = {}) {
+    return this.api.getViewModel(docType, docId, params).pipe(
       map(response => {
-        const form = getFormGroup(response.schema, response.model, docID !== 'new');
+        const form = getFormGroup(response.schema, response.model, docId !== 'new');
         form['metadata'] = response.metadata;
         return form;
       }));

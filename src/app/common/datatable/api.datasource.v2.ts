@@ -4,12 +4,12 @@ import { DocListOptions, Continuation, DocListResponse, DocumentBase, FormListSe
 import { ApiService } from '../../services/api.service';
 import { scrollIntoViewIfNeeded } from '../utils';
 
-interface DatasourceCommand { command: string; data?: any; }
+interface DataSourceCommand { command: string; data?: any; }
 
 export class ApiDataSource {
 
   id = '';
-  private paginator = new Subject<DatasourceCommand>();
+  private paginator = new Subject<DataSourceCommand>();
 
   private readonly _formListSettings$ = new BehaviorSubject<FormListSettings>(new FormListSettings());
   set formListSettings(value) { this._formListSettings$.next(value); }
@@ -22,7 +22,7 @@ export class ApiDataSource {
   continuation: Continuation = { first: null, last: null };
   private EMPTY: DocListResponse = { data: [], continuation: { first: this.continuation.first, last: this.continuation.first } };
 
-  constructor(public api: ApiService, public type: string, public pageSize = 10, direction = false) {
+  constructor(public api: ApiService, public type: string, public pageSize = 10, direction = false, private used = '') {
 
     this.result$ = this.paginator.pipe(
       filter(stream => !(
@@ -44,20 +44,28 @@ export class ApiDataSource {
             stream.command = 'sort';
             break;
         }
-        return this.api.getDocList(this.type, id, stream.command, this.pageSize, offset,
-          this.formListSettings.order, this.formListSettings.filter,
-          this.listOptions).pipe(
-            tap(data => {
-              this.renderedData = data.data;
-              this.renderedDataList = data.data;
-              this.continuation = data.continuation;
-              setTimeout(() => scrollIntoViewIfNeeded(type, 'ui-state-highlight', direction));
-            }),
-            catchError(err => {
-              this.renderedData = this.EMPTY.data;
-              this.continuation = this.EMPTY.continuation;
-              return of(this.EMPTY);
-            }));
+        return this.api.getDocList(
+          this.type,
+          id,
+          stream.command,
+          this.pageSize,
+          offset,
+          this.formListSettings.order,
+          this.used ? [] : this.formListSettings.filter,
+          this.listOptions,
+          this.used
+        ).pipe(
+          tap(data => {
+            this.renderedData = data.data;
+            this.renderedDataList = data.data;
+            this.continuation = data.continuation;
+            setTimeout(() => scrollIntoViewIfNeeded(type, 'ui-state-highlight', direction));
+          }),
+          catchError(err => {
+            this.renderedData = this.EMPTY.data;
+            this.continuation = this.EMPTY.continuation;
+            return of(this.EMPTY);
+          }));
       }),
       map(data => data.data), share());
   }

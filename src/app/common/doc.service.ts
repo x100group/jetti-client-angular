@@ -109,10 +109,11 @@ export class DocService {
     this._showDialog$.next({ uuid, doc });
   }
 
-  download = (data: BlobPart, filename: string, type = 'text/xml') => {
+  download(data: BlobPart, filename: string, type = 'text/xml') {
     const file = new Blob([data], { type: type });
-    if (window.navigator.msSaveOrOpenBlob) // IE10+
-      window.navigator.msSaveOrOpenBlob(file, filename);
+    const anyNav: any = window.navigator;
+    if (anyNav.msSaveOrOpenBlob) // IE10+
+      anyNav.msSaveOrOpenBlob(file, filename);
     else { // Others
       const a = document.createElement('a'),
         url = URL.createObjectURL(file);

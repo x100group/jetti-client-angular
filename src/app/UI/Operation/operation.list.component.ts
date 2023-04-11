@@ -65,7 +65,7 @@ export class OperationListComponent implements OnInit {
   constructor(public appAuth: AuthService, public route: ActivatedRoute) { }
 
   ngOnInit() {
-    if (this.route.snapshot.queryParams.goto) return;
+    if (this.route.snapshot.queryParams.goto || this.route.snapshot.params.used) return;
     combineLatest([this.appAuth.userProfile$, this.super.isInitComplete$])
       .pipe(filter(state => state[0] && state[1]))
       .pipe(take(1)).subscribe(state => {

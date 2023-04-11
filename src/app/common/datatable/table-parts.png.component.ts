@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit, QueryList, ViewChildren, EventEmitter, Output } from '@angular/core';
 import { FormArray, FormGroup, ValidatorFn, AbstractControl } from '@angular/forms';
 import { merge, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -24,12 +24,20 @@ const TablePartValidator: ValidatorFn = (c: AbstractControl) => {
 export class TablePartsComponent implements OnInit, OnDestroy {
   @Input() formGroup: FormArray;
   @Input() control: TableDynamicControl;
+  @Output() onDoubleClick: EventEmitter<{ [x: string]: any }> = new EventEmitter();
   @ViewChildren(EditableColumn) editableColumns: QueryList<EditableColumn>;
 
   dataSource: any[];
   columns: ColumnDef[] = [];
   selection: any[] = [];
   showTotals = false;
+  lastSelectedIndex = 42;
+
+
+  public get readOnly(): boolean {
+    return this.control.readOnly || this.columns.every(e => e.readOnly);
+  }
+
 
   private _subscription$: Subscription = Subscription.EMPTY;
   private _valueChanges$: Subscription = Subscription.EMPTY;
@@ -133,9 +141,18 @@ export class TablePartsComponent implements OnInit, OnDestroy {
 
   }
 
+  onRowSelect(event) {
+    if (this.lastSelectedIndex === event.data.index) {
+      this.lastSelectedIndex = 42;
+      this.onDoubleClick.emit(event.data);
+    } else {
+      this.lastSelectedIndex = event.data.index;
+    }
+  }
+
   onEditComplete(event) { }
-  onEditInit(event) { }
-  onEditCancel(event) { }
+  onEditInit(event) { console.log('onEditInit', event) }
+  onEditCancel(event) { console.log('onEditCancel', event) }
 
   customSort(event: SortEvent) {
     event.data = this.formGroup.getRawValue();

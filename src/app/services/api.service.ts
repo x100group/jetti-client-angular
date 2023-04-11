@@ -18,7 +18,7 @@ import { AccountRegister } from 'jetti-middle/dist';
 import { IUserSettings } from 'jetti-middle/dist/common/classes/user-settings';
 import { IDescedantData } from '../common/descendants/descendants.component';
 
-class cached<T> {
+class Cached<T> {
   constructor(private _data: Map<string, T>, private _defaultValue?: T) { }
   get(key: string): T {
     return this._data.get(key) || this._defaultValue;
@@ -31,7 +31,7 @@ class cached<T> {
 @Injectable({ providedIn: 'root' })
 export class ApiService {
 
-  private _indexedOperationsTypes: cached<string>;
+  private _indexedOperationsTypes: Cached<string>;
 
   constructor(private http: HttpClient, public lds: LoadingService) { }
 
@@ -103,12 +103,10 @@ export class ApiService {
 
   async getIndexedOperationType(operationId: string): Promise<string> {
     if (!this._indexedOperationsTypes) {
-      const operations = await this.getIndexedOperationsTypes()
-      this._indexedOperationsTypes = new cached<string>(operations, 'Document.Operation');
+      const operations = await this.getIndexedOperationsTypes();
+      this._indexedOperationsTypes = new Cached<string>(operations, 'Document.Operation');
     }
     return this._indexedOperationsTypes.get(operationId);
-    // const query = `${environment.api}getIndexedOperationType/${operationId}`;
-    // return (this.http.get<string>(query)).toPromise();
   }
 
   async getIndexedOperationsTypes(): Promise<Map<string, string>> {
@@ -122,18 +120,23 @@ export class ApiService {
     return (this.http.get<RefValue>(query)).toPromise();
   }
 
-  getDocList(type: string, id: string, command: string,
-    count = 10, offset = 0, order: FormListOrder[] = [],
+  getDocList(type: string,
+    id: string,
+    command: string,
+    count = 10,
+    offset = 0,
+    order: FormListOrder[] = [],
     filter: FormListFilter[] = [],
-    listOptions: DocListOptions = { withHierarchy: false, hierarchyDirectionUp: false }): Observable<DocListResponse> {
+    listOptions: DocListOptions = { withHierarchy: false, hierarchyDirectionUp: false },
+    used = ''): Observable<DocListResponse> {
     const query = `${environment.api}list`;
     const body: DocListRequestBody = { id, type, command, count, offset, order, filter, listOptions };
-    return this.http.post<DocListResponse>(query, body);
+    return this.http.post<DocListResponse>(query, { ...body, used });
   }
 
-  getView(type: string, group: string): Observable<IViewModel> {
+  getView(type: string, params: { [key: string]: any } = {}): Observable<IViewModel> {
     const query = `${environment.api}view`;
-    return this.http.post<IViewModel>(query, { type, group });
+    return this.http.post<IViewModel>(query, { type, ...params });
   }
 
   getViewModel(type: string, id = '', params: { [key: string]: any } = {}): Observable<IViewModel> {
@@ -318,19 +321,6 @@ export class ApiService {
   tree(type: string) {
     const query = `${environment.api}tree/${type}`;
     return this.http.get<ITree[]>(query);
-  }
-
-  hierarchyList(type: string, id: string = 'top', columns: any[] = []) {
-    const query = `${environment.api}hierarchyList/${type}/${id}`;
-    const result = this.http.get<any[]>(query);
-    if (columns.length) {
-      result.pipe(take(1)).subscribe(hierarchyList => {
-        this.getDocList(type, '', 'first').toPromise().then(docList => {
-        });
-      });
-    }
-
-    return result;
   }
 
   execute(type: string, method: string, doc: FormBase) {

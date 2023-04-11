@@ -1,7 +1,7 @@
 <div>
   <p-sidebar *ngIf="!isRelationList" [(visible)]="sidebarDisplay" [style]="{width:'45em'}" position="right">
     <p-tabView>
-      <p-tabPanel [header]="'Filters'" leftIcon="fas fa-filter">
+      <p-tabPanel *ngIf="isFilterAvailable" [header]="'Filters'" leftIcon="fas fa-filter">
         <div>
           <p-toolbar>
             <div class="ui-toolbar-group-left">
@@ -193,19 +193,22 @@
             (click)="copyToClipboardSelectedTotal()"></button>
           <i class="pi pi-bars"></i>
         </span>
-        <button id="showDeleted" [icon]="this.isDeletedHidden ? 'fas fa-eye-slash' : 'fas fa-eye'" type="text" pButton
+        <button *ngIf="isFilterAvailable" id="showDeleted" [icon]="this.isDeletedHidden ? 'fas fa-eye-slash' : 'fas fa-eye'" type="text" pButton
           type="button" (click)="this.isDeletedHidden = !this.isDeletedHidden"
           [ngClass]="this.isDeletedHidden ? 'ui-button-success' : 'ui-button-danger'"
           [pTooltip]="this.isDeletedHidden ? 'Show deleted' : 'Hide deleted'" tooltipPosition="top"
           showDelay="2000"></button>
-        <span *ngIf="!isDoc">
+        <span *ngIf="!isDoc && !usedInId">
           <p-slideMenu #addMenu [model]="addMenuItems" [popup]="true" effectDuration="300" easing="ease-in"
             [viewportHeight]="125"></p-slideMenu>
           <button #addMenuBtn type="button" pButton icon="pi pi-list" (click)="addMenu.toggle($event)"
             pTooltip="More..." tooltipPosition="top" showDelay="2000"></button>
         </span>
-        <p-button type="text" (click)="sidebarDisplay = !sidebarDisplay" icon="fa fa-cog" pTooltip="Settings"
-          tooltipPosition="top" showDelay="2000">
+        <p-button type="text" (click)="toggleSettings()" icon="fa fa-cog" pTooltip="Settings" tooltipPosition="top"
+          showDelay="2000">
+        </p-button>
+        <p-button type="text" (click)="showHotkeys()" icon="fa fa-info" pTooltip="Info" tooltipPosition="top"
+          showDelay="2000">
         </p-button>
       </div>
     </p-toolbar>
@@ -235,7 +238,7 @@
               <p-treeTableSortIcon [field]="column.field"></p-treeTableSortIcon>
             </th>
           </tr>
-          <tr>
+          <tr *ngIf="isFilterAvailable">
 
             <th *ngFor="let column of treeTable.columns" [ngStyle]="column.style" [ngSwitch]="column.type"
               class="ui-fluid ui-column-filter">
@@ -373,7 +376,7 @@
             </th>
             <th></th>
           </tr>
-          <tr>
+          <tr *ngIf="isFilterAvailable">
             <th [ngStyle]="{'width': '30px', 'text-align': 'center', padding: 0, margin: 0}">
               <p-triStateCheckbox [ngModel]="columns[postedCol.field]?.value"
                 (ngModelChange)="update(postedCol, $event, '=')"></p-triStateCheckbox>
@@ -511,7 +514,7 @@
   </div>
 
 </div>
-<p-contextMenu #cm [model]="treeNodesVisible ? contexCommands.tree : contexCommands.list"></p-contextMenu>
+<p-contextMenu #cm [model]="treeNodesVisible ? contextCommands.tree : contextCommands.list"></p-contextMenu>
 
 <p-confirmDialog [key]="'list: ' + this.id" [closeOnEscape]="true" [closable]="true" #cdlg appendTo="body">
   <p-footer>

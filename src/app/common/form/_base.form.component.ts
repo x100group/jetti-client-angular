@@ -249,13 +249,13 @@ export class _baseDocFormComponent implements OnDestroy, OnInit, IFormEventsMode
   usedIn() { this.router.navigate(['Form.SearchAndReplace', this.id], {}); }
 
   private _close() {
-    const tab = this.tabStore.state.tabs.find(t => t.id === this.id && t.type === this.type);
+    const tab = this.tabStore.state.tabs.find(t => t.id === this.id && t.type === this.type && !t.used);
     if (tab) {
       this.tabStore.close(tab);
       let Group = '';
       const GroupControl = this.form.get('Group');
       if (GroupControl) Group = GroupControl.value.id;
-      const parentTab = this.tabStore.state.tabs.find(t => t.type === this.type && !t.id && t.group === Group);
+      const parentTab = this.tabStore.state.tabs.find(t => t.type === this.type && !t.id && t.group === Group && !t.used);
       if (parentTab) {
         const route = [parentTab.type];
         if (parentTab.group) route.push('group', parentTab.group);

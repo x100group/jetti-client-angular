@@ -1,5 +1,5 @@
 <p-tabView #tv [controlClose]="true" [activeIndex]="(tabStore.state$ | async).selectedIndex"
-  (onClose)="handleClose($event)" (onChange)="selectedIndexChange($event)">
+  (onClose)="onTabClose($event)" (onChange)="onTabSelected($event)">
   <p-tabPanel #tp *ngFor="let tab of (tabStore.state$ | async).tabs" header="{{ tab.header | bcEllipsis:40 }}"
     [tooltip]="tab.header" [leftIcon]="tab.icon" [closable]="tab.type !== 'home'" style="user-select: none;">
     <ng-template pTemplate="content">
