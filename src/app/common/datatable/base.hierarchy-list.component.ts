@@ -169,6 +169,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   addMenuItems: MenuItem[];
   showActiveFilters = false;
   usSettingsEditMode = false;
+  _isSelectAll = false;
 
   hotKeys = [
     { key: 'Insert', handler: this.add, info: 'add new row' },
@@ -176,8 +177,8 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     { key: 'F2', handler: this.open, info: 'edit selected row' },
     { key: 'F5', handler: this.refresh, info: 'refresh data' },
     { key: 'Delete', handler: this.delete, info: 'delete selected row' },
-    { key: 'ctrl+q', handler: this.clearAllFilters, info: 'disable all filters' },
-    { key: 'ctrl+a', handler: this.selectAll, info: 'select all rows' },
+    { key: 'ctrl+Q', handler: this.clearAllFilters, info: 'disable all filters' },
+    { key: 'ctrl+A', handler: this.selectAll, info: 'select all rows' },
     { key: 'ctrl+ArrowRight', handler: this.next, info: 'move to next tab' },
     { key: 'ctrl+ArrowLeft', handler: this.prev, info: 'move to previous tab' },
     { key: 'ctrl+ArrowUp', handler: this.first, info: 'move to first tab' },
@@ -615,10 +616,12 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
     const commands = [];
 
-    commands.push({
-      label: 'Select (All)', icon: 'fa fa-check-square',
-      command: (event) => this.selection = [...this.dataSource.renderedDataList]
-    });
+    commands.push(
+      {
+        label: 'Select (All)', icon: 'fa fa-check-square',
+        command: this.selectAll.bind(this)
+      }
+    );
 
     if (this.isFilterAvailable) {
 
@@ -631,7 +634,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
           label: 'Clear all filters', icon: 'far fa-trash-alt',
           command: (event) => this.clearAllFilters()
         }
-      )
+      );
     }
 
     this.contextCommands.tree = [
@@ -699,8 +702,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
 
   selectAll() {
     if (this.treeNodesVisible) return;
-    this.selection = [...this.dataSource.renderedDataList];
-    this.tbl.reset();
+    this._isSelectAll = !this._isSelectAll;
+    this.selection = this._isSelectAll ? [...this.dataSource.renderedDataList] : [];
+    this.tbl.selectionChange.emit(this.selection);
   }
 
   toggleSettings() {
@@ -708,17 +712,13 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   showHotkeys() {
-    const ref = this.dialog.open(ImageModalComponent, {
+    this.dialog.open(ImageModalComponent, {
       header: 'Hotkeys',
       baseZIndex: 10000,
       closeOnEscape: true,
       dismissableMask: true,
       showHeader: false,
       data: this.hotKeys.map(e => ({ ...e, key: e.key.toUpperCase().replace('ARROW', '') }))
-    });
-
-    ref.onClose.subscribe(result => {
-      console.log('Dialog closed with result:', result);
     });
   }
 

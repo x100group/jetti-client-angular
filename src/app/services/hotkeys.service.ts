@@ -17,8 +17,8 @@ export class HotkeysService {
     ],
     multi: {
       ctrlKey: [
-        'q',
-        'a',
+        'KeyQ',
+        'KeyA',
         'ArrowRight',
         'ArrowLeft',
         'ArrowUp',
@@ -27,7 +27,7 @@ export class HotkeysService {
       shiftKey: [],
       altKey: []
     }
-  }
+  };
 
   private _activeUrl$ = this.tabs.state$.pipe(map(({ selectedIndex, tabs }) => tabs[selectedIndex].routerLink));
   private _keyboardEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(
@@ -45,17 +45,18 @@ export class HotkeysService {
 
   filterEvents(event: KeyboardEvent) {
     const isSingle = Object.keys(this.keyMap.multi)
-      .every(key => !event[key]) && this.keyMap.single.includes(event.key);
+      .every(key => !event[key]) && this.keyMap.single.includes(event.code);
     if (isSingle) return true;
     return Object.entries(this.keyMap.multi)
       .filter(([key]) => event[key])
-      .map(([key, value]) => value.includes(event.key))
+      .map(([key, value]) => value.includes(event.code))
       .filter(e => e).length === 1;
   }
 
   mapEvent(event: KeyboardEvent) {
-    const mod = Object.keys(this.keyMap.multi).filter(k => !!event[k]).map(e => e.replace('Key', ''));
-    return mod.length ? [mod.join('+'), event.key].join('+') : event.key;
+    const deleteKey = (s: string) => s.replace('Key', '');
+    const mod = Object.keys(this.keyMap.multi).filter(k => !!event[k]).map(deleteKey);
+    return mod.length ? [mod.join('+'), deleteKey(event.code)].join('+') : deleteKey(event.code);
   }
 
 }
