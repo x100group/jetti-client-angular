@@ -13,7 +13,6 @@ export class HotkeysService {
       'F2',
       'F4',
       'F5',
-      'Delete'
     ],
     multi: {
       ctrlKey: [
@@ -32,12 +31,11 @@ export class HotkeysService {
   private _activeUrl$ = this.tabs.state$.pipe(map(({ selectedIndex, tabs }) => tabs[selectedIndex].routerLink));
   private _keyboardEvent$ = fromEvent<KeyboardEvent>(document, 'keydown').pipe(
     filter(this.filterEvents.bind(this)),
-    tap(event => event.preventDefault()),
-    map<KeyboardEvent, string>(this.mapEvent.bind(this))
+    map<KeyboardEvent, { key: string, event: KeyboardEvent }>(this.mapEvent.bind(this))
   );
 
   hotKeyEvent$ = this._activeUrl$.pipe(
-    switchMap(activeUrl => this._keyboardEvent$.pipe(map(key => ({ key, activeUrl })))),
+    switchMap(activeUrl => this._keyboardEvent$.pipe(map(event => ({ ...event, activeUrl })))),
     tap(event => console.log('HotKey', event)),
   );
 
@@ -56,7 +54,9 @@ export class HotkeysService {
   mapEvent(event: KeyboardEvent) {
     const deleteKey = (s: string) => s.replace('Key', '');
     const mod = Object.keys(this.keyMap.multi).filter(k => !!event[k]).map(deleteKey);
-    return mod.length ? [mod.join('+'), deleteKey(event.code)].join('+') : deleteKey(event.code);
+    return {
+      key: mod.length ? [mod.join('+'), deleteKey(event.code)].join('+') : deleteKey(event.code),
+      event
+    };
   }
-
 }

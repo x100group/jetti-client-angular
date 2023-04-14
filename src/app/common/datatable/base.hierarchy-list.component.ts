@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MenuItem } from 'primeng/components/common/menuitem';
 import { SortMeta } from 'primeng/components/common/sortmeta';
 import { merge, Observable, Subject, Subscription, of, BehaviorSubject, combineLatest, fromEvent } from 'rxjs';
-import { debounceTime, filter, map, take } from 'rxjs/operators';
+import { debounceTime, filter, map, take, tap } from 'rxjs/operators';
 import { v1, v4 } from 'uuid';
 import { calendarLocale, dateFormat } from '../../primeNG.module';
 import { addMonths, copyToClipboard, numberToMoneyString, scrollIntoViewIfNeeded } from '../utils';
@@ -176,7 +176,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     { key: 'F9', handler: this.copy, info: 'copy selected row' },
     { key: 'F2', handler: this.open, info: 'edit selected row' },
     { key: 'F5', handler: this.refresh, info: 'refresh data' },
-    { key: 'Delete', handler: this.delete, info: 'delete selected row' },
     { key: 'ctrl+Q', handler: this.clearAllFilters, info: 'disable all filters' },
     { key: 'ctrl+A', handler: this.selectAll, info: 'select all rows' },
     { key: 'ctrl+ArrowRight', handler: this.next, info: 'move to next tab' },
@@ -229,6 +228,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       !this.isRelationList && this.hotkey.hotKeyEvent$
         .pipe(
           filter(e => e.activeUrl === this.url && this.hotKeys.some(h => h.key === e.key)),
+          tap(({ event }) => event.preventDefault())
         )
         .subscribe(({ key }) => this.hotKeys.find(h => h.key === key).handler.apply(this)),
       this._filterSettingsState$
