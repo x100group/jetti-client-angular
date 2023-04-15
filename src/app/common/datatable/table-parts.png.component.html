@@ -48,7 +48,7 @@
         {{rowIndex + 1}}
       </td>
       <td *ngFor="let col of columns" [ngStyle]="col.style" pEditableColumn [pEditableColumnField]="col.field"
-        class="ui-resizable-column">
+        [pEditableColumnDisabled]="pEditableColumnDisabled" class="ui-resizable-column">
         <p-cellEditor>
           <ng-template pTemplate="input">
             <j-control [control]="col.control" [form]="getControl(rowData.index)"></j-control>

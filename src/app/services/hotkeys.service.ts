@@ -15,16 +15,16 @@ export class HotkeysService {
       'F5',
     ],
     multi: {
-      ctrlKey: [
+      ctrlKey: [],
+      shiftKey: [],
+      altKey: [
         'KeyQ',
         'KeyA',
         'ArrowRight',
         'ArrowLeft',
         'ArrowUp',
         'ArrowDown'
-      ],
-      shiftKey: [],
-      altKey: []
+      ]
     }
   };
 

@@ -33,6 +33,9 @@ export class TablePartsComponent implements OnInit, OnDestroy {
   showTotals = false;
   lastSelectedIndex = 42;
 
+  get pEditableColumnDisabled() {
+    return !!this.onDoubleClick.observers.length;
+  }
 
   public get readOnly(): boolean {
     return this.control.readOnly || this.columns.every(e => e.readOnly);

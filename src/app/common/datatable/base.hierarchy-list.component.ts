@@ -176,12 +176,12 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     { key: 'F9', handler: this.copy, info: 'copy selected row' },
     { key: 'F2', handler: this.open, info: 'edit selected row' },
     { key: 'F5', handler: this.refresh, info: 'refresh data' },
-    { key: 'ctrl+Q', handler: this.clearAllFilters, info: 'disable all filters' },
-    { key: 'ctrl+A', handler: this.selectAll, info: 'select all rows' },
-    { key: 'ctrl+ArrowRight', handler: this.next, info: 'move to next tab' },
-    { key: 'ctrl+ArrowLeft', handler: this.prev, info: 'move to previous tab' },
-    { key: 'ctrl+ArrowUp', handler: this.first, info: 'move to first tab' },
-    { key: 'ctrl+ArrowDown', handler: this.last, info: 'move to last tab' },
+    { key: 'alt+Q', handler: this.clearAllFilters, info: 'disable all filters' },
+    { key: 'alt+A', handler: this.selectAll, info: 'select all rows' },
+    { key: 'alt+ArrowRight', handler: this.next, info: 'move to next tab' },
+    { key: 'alt+ArrowLeft', handler: this.prev, info: 'move to previous tab' },
+    { key: 'alt+ArrowUp', handler: this.first, info: 'move to first tab' },
+    { key: 'alt+ArrowDown', handler: this.last, info: 'move to last tab' },
   ];
 
   // create beauty dialog to showing hotkeys, use prime NG dialog service. 
