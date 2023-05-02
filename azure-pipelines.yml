@@ -1,0 +1,38 @@
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+
+    - script: |
+        docker build -t repository.jfd-prod.x100platforma.com/docker-local/finance/x100group.jetti-front:$(tag) .
+      displayName: 'Docker build'
+
+    - task: ArtifactoryDocker@1
+      inputs:
+        command: 'push'
+        artifactoryService: 'artifactory-x100'
+        targetRepo: 'docker-local'
+        imageName: 'repository.jfd-prod.x100platforma.com/docker-local/finance/x100group.jetti-front:$(tag)'
+        collectBuildInfo: true
+        buildName: '$(Build.DefinitionName)'
+        buildNumber: '$(Build.BuildNumber)'
+
+    - task: ArtifactoryPublishBuildInfo@1
+      inputs:
+        artifactoryService: 'artifactory-x100'
+        buildName: '$(Build.DefinitionName)'
+        buildNumber: '$(Build.BuildNumber)'
