@@ -1,4 +1,4 @@
-import { environment } from 'src/environments/environment.az';
+import { environment } from 'src/environments/environment';
 import { AfterViewInit, ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
 import { ScrollPanel } from '../../node_modules/primeng/scrollpanel';

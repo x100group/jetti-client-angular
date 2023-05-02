@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json /app
 RUN npm install
 COPY . /app
-RUN npm run build-ru
+RUN npm run build-az
 
 FROM nginx:1.20.1-alpine
 COPY nginx.conf /etc/nginx/nginx.conf
