@@ -7,7 +7,9 @@
     "start": "ng serve",
     "build": "ng build --prod --aot && firebase deploy",
     "lint": "ng lint",
-    "build-dev": "ng build --configuration dev"
+    "build-dev": "ng build --configuration dev",
+    "build-ru": "ng build --configuration ru",
+    "build-az": "ng build --configuration az"
   },
   "private": true,
   "dependencies": {
