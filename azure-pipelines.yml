@@ -16,7 +16,6 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-
     - script: |
         docker build -t repository.jfd-prod.x100platforma.com/docker-local/finance/x100group.jetti-front:$(tag) .
       displayName: 'Docker build'
@@ -36,3 +35,4 @@ stages:
         artifactoryService: 'artifactory-x100'
         buildName: '$(Build.DefinitionName)'
         buildNumber: '$(Build.BuildNumber)'
+

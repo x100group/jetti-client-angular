@@ -2,7 +2,7 @@ import { OwnerRef, StorageType } from 'jetti-middle/dist';
 
 export type ControlTypes =
   'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'table' |
-  'enum' | 'link' | 'textarea' | 'autocomplete' | 'script' | 'URL';
+  'enum' | 'link' | 'textarea' | 'autocomplete' | 'script' | 'URL' | 'HTML';
 
 export interface IFormControlPlacing {
   panel: string;
@@ -124,6 +124,17 @@ export class URLFormControl extends FormControlInfo {
   }
 }
 
+export class HTMLFormControl extends FormControlInfo {
+  constructor(options: IFormControlInfo) {
+    super(options);
+    this.type = 'string';
+    this.controlType = 'HTML';
+    this.style = { 'min-width': '100%', 'height': '54px' };
+    if (options.style) this.style = { ...this.style, ...options.style };
+    if (this.value === undefined) this.value = '';
+  }
+}
+
 export class EnumFormControl extends FormControlInfo {
   constructor(options: IFormControlInfo) {
     super(options);
@@ -156,7 +167,7 @@ export class BooleanFormControl extends FormControlInfo {
     super(options);
     this.controlType = 'boolean';
     this.type = 'boolean';
-    this.style = { 'min-width': '24px', 'max-width': '24px', 'width': '90px', 'text-align': 'center', 'margin-top': '26px' };
+    this.style = { 'min-width': '24px', 'width': '90px', 'text-align': 'center', 'margin-top': '26px' };
     if (options.style) this.style = { ...this.style, ...options.style };
     if (this.value === undefined) this.value = false;
   }
