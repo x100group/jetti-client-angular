@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { StorageType } from 'jetti-middle/dist';
 import { ApiService } from '../../services/api.service';
 // tslint:disable-next-line:max-line-length
-import { AutocompleteFormControl, BooleanFormControl, DateFormControl, DateTimeFormControl, EnumFormControl, FormControlInfo, IFormControlInfo, NumberFormControl, ScriptFormControl, TableDynamicControl, TextareaFormControl, TextboxFormControl, ControlTypes, LinkFormControl, URLFormControl, IFormControlPlacing as IFormControlPlacement } from './dynamic-form-base';
+import { AutocompleteFormControl, BooleanFormControl, DateFormControl, DateTimeFormControl, EnumFormControl, FormControlInfo, IFormControlInfo, NumberFormControl, ScriptFormControl, TableDynamicControl, TextareaFormControl, TextboxFormControl, ControlTypes, LinkFormControl, URLFormControl, HTMLFormControl, IFormControlPlacing as IFormControlPlacement } from './dynamic-form-base';
 
 export function cloneFormGroup(formGroup: FormGroup): FormGroup {
   const newFormGroup = new FormGroup({});
@@ -126,6 +126,9 @@ export function getFormGroup(schema: { [x: string]: any }, model: { [x: string]:
         case 'URL':
           newControl = new URLFormControl(controlOptions);
           break;
+        case 'HTML':
+          newControl = new HTMLFormControl(controlOptions);
+          break;
         default:
           if (type.includes('.')) {
             controlOptions.type = controlType; // здесь нужен тип ссылки
@@ -141,7 +144,14 @@ export function getFormGroup(schema: { [x: string]: any }, model: { [x: string]:
   };
 
   processRecursive(schema, controls);
-
+  const companyControl = controls.find(e =>
+    e.controlType === 'autocomplete'
+    && e.type === 'Catalog.Company'
+    && !e.required
+    && !e.disabled
+    && (e.order || 1) > 0
+    && !e.hidden);
+  if (companyControl) companyControl.required = true;
   const formGroup = toFormGroup(controls);
 
   // Create formArray's for table parts of document
@@ -162,6 +172,10 @@ export function getFormGroup(schema: { [x: string]: any }, model: { [x: string]:
       formArray['sample'] = cloneFormGroup(formArray.at(0) as FormGroup);
       formArray.removeAt(0);
     });
+
+  if (!model.timestamp)
+    model.company = { id: null, code: null, value: null, type: 'Catalog.Company' };
+
   formGroup.patchValue(model, patchOptionsNoEvents);
   formGroup['schema'] = schema;
 
@@ -181,8 +195,8 @@ export function getFormGroup(schema: { [x: string]: any }, model: { [x: string]:
       controls: control.filter(el => el.fieldset === fieldset)
     }));
     result.tables = control.filter(el => el.controlType === 'table');
-    result.standalone = control.filter(el => !['table', 'textarea', 'script'].includes(el.controlType) && !el.fieldset);
-    result.fullwidth = control.filter(el => ['textarea', 'script'].includes(el.controlType));
+    result.standalone = control.filter(el => !['table', 'textarea', 'script', 'HTML'].includes(el.controlType) && !el.fieldset);
+    result.fullwidth = control.filter(el => ['textarea', 'script', 'HTML'].includes(el.controlType));
     return result;
   };
 

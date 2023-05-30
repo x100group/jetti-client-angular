@@ -364,7 +364,6 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   private _update(_filter: FormListFilter) {
-    debugger
     if (!_filter.left) return;
     this.setColumnFilter(_filter);
     this.settings.filter = [_filter, ...this.settings.filter.filter(e => e.left !== _filter.left)];
@@ -372,7 +371,22 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     this._pageSize$.next(this.getPageSize());
   }
 
+  private async _onOperationSwitched(operationType: string, right) {
+    this.settings.filter = [
+      ...this.settings.filter.filter(e => e.isActive && e.left !== 'Operation' && e.left !== 'Group'),
+      { left: 'Operation', center: '=', right: right, isActive: !!(right && right.id) }];
+    this.type = operationType;
+    this.dataSource.type = operationType;
+    this.data = undefined;
+    await this.ngOnInit();
+  }
+
   async update(column: ColumnDef, right: any, center: matchOperator = 'like', startEnd = 'start' || 'end', isActive?: boolean) {
+
+    // if ((!right && right !== false && right !== '') || (typeof right === 'object' && !right.value && !(Array.isArray(right)))) {
+    //   this.id = null;
+    //   right = null;
+    // }
 
     if (!column) return;
 
@@ -382,13 +396,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
       let type = 'Document.Operation';
       if (right && right.id) type = await this.ds.api.getIndexedOperationType(right.id);
       if (this.type !== type) {
-        this.settings.filter = [
-          ...this.settings.filter.filter(e => e.isActive),
-          { left: 'Operation', center: '=', right: right, isActive: !!right.id }];
-        this.type = type;
-        this.dataSource.type = this.type;
-        this.data = undefined;
-        await this.ngOnInit();
+        await this._onOperationSwitched(type, right);
         return;
       }
     }
@@ -453,7 +461,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
     if (!this._isInitComplete$.value) return;
     this.multiSortMeta = event.multiSortMeta;
     this.prepareDataSource();
-    if (this.id) this.goto(this.id);
+    if (this.id) this.dataSource.sort();
     else this.isCatalog ? this.first() : this.last();
   }
 
@@ -589,7 +597,9 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private getCurrentParent() {
     const result = { parent: null };
     if (this.treeNodesVisible && this.selectedData)
-      result.parent = this.selectedData.isfolder ? this.selectedData.id : this.selectedData.parent.id;
+      result.parent = (this.selectedData.isfolder || Object.keys(this.selectedData).length === 1) ?
+        this.selectedData.id :
+        this.selectedData.parent.id;
     return result;
   }
 
@@ -730,7 +740,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   private listenRefresh(id: string) {
     // this.selection = [];
     this.dataSource.result$.pipe(take(1)).subscribe(d => {
-      if (d.length > 0 && !this.treeNodesVisible) {
+      if (d.length > 0) {
         const row = d.find(el => el.id === id);
         if (row) this.id = row.id;
       }

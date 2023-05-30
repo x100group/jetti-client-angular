@@ -98,7 +98,7 @@
           <j-control [control]="vk.ExpenseAnalytics" [form]="form"></j-control>
         </div>
 
-        <div *ngIf="Operation === 'Перемещение ДС' || Operation === 'Оплата поставщику'" fxLayout="row"
+        <div *ngIf="['Перемещение ДС','Оплата поставщику','Внутренний займ'].includes(Operation)" fxLayout="row"
           fxLayout.xs="column" fxLayoutGap="35px" fxLayoutGap.xs="0px">
           <j-control [control]="vk.CashOrBank" [form]="form"></j-control>
           <j-control [control]="vk.CashOrBankIn" [form]="form"></j-control>
@@ -139,6 +139,12 @@
             [control]="vk.TaxRate" [form]="form"></j-control>
           <j-control [control]="vk.PayDay" [form]="form"></j-control>
         </div>
+
+        <div *ngIf="isSalaryOperation" fxLayout="row" fxLayout.xs="column" fxLayoutGap="35px" fxLayoutGap.xs="0px">
+          <j-control [control]="vk.StartDate" [form]="form"></j-control>
+          <j-control [control]="vk.EndDate" [form]="form"></j-control>
+        </div>
+
         <br>
         <div *ngIf="form.get('BudgetPayment').value || Operation === 'Перечисление налогов и взносов'" fxLayout="row"
           fxLayout.xs="column" fxLayoutGap="35px" fxLayoutGap.xs="0px">
