@@ -1185,7 +1185,7 @@ export class BaseHierarchyListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this._subs.forEach(e => e.unsubscribe());
+    this._subs.forEach(e => e && e.unsubscribe());
     this._debonce$.complete();
     this._pageSize$.complete();
   }
