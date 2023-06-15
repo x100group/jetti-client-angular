@@ -51,7 +51,7 @@
         [pEditableColumnDisabled]="pEditableColumnDisabled" class="ui-resizable-column">
         <p-cellEditor>
           <ng-template pTemplate="input">
-            <j-control [control]="col.control" [form]="getControl(rowData.index)"></j-control>
+            <j-control [control]="col.control" [form]="getControl(rowData.index)" [tableName]="control.key"></j-control>
           </ng-template>
           <ng-template pTemplate="output">
             <span [ngSwitch]="col.type">
