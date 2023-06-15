@@ -55,7 +55,6 @@ export class AutocompleteComponent implements ControlValueAccessor, Validator, O
   @Input() id: string;
   @Input() formControl: FormControl;
   @Input() appendTo;
-  @Input() tableName: string;
 
   form: FormGroup = new FormGroup({
     suggest: new FormControl({ value: this.value }, AutocompleteValidator(this))
@@ -222,20 +221,16 @@ export class AutocompleteComponent implements ControlValueAccessor, Validator, O
     return result;
   }
 
-  private getFilterFunctionName() {
-    return ['getFilter', this.tableName, this.id].filter(e => !!e).join('_');
-  }
-
-  getFilterFromModule(f: FormListFilter[]): FormListFilter[] {
-    if (!this.formControl) return f; // list form
+  getFilterFromModule(Filter: FormListFilter[]): FormListFilter[] {
+    if (!this.formControl) return Filter; // list form
     const form = this.formControl.root as FormGroup;
-    const funcName = this.getFilterFunctionName();
-    if (!form['metadata'] || !form['metadata']['module']) return f;
+    const funcName = `getFilter_${this.id}`;
+    if (!form['metadata'] || !form['metadata']['module']) return Filter;
     const functions = new Function('', form['metadata']['module']).bind(this)();
-    if (!functions[funcName]) return f;
+    if (!functions[funcName]) return Filter;
     const funcBody = `f = ${functions[funcName].toString()}; return f();`;
     const func = new Function('doc, row, value, filter', funcBody);
-    return func.bind(this, form.getRawValue(), this.formControl.parent.value, this.formControl.value, f)();
+    return func.bind(this, form.getRawValue(), this.formControl.parent.value, this.formControl.value, Filter)();
   }
 
   calcDialogWidth() {

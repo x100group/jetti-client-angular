@@ -16,8 +16,6 @@ export class DynamicFormControlComponent implements OnInit, OnDestroy {
   @Input() form: FormGroup;
   @Input() appendTo;
   @Output() change = new EventEmitter();
-  @Input() tableName: string;
-
   get formControl() { return this.form.get(this.control.key); }
 
   valueChanges$: Subscription = Subscription.EMPTY;
